@@ -47,6 +47,10 @@ pub mod storage;
 /// Timer for internal use
 mod timer;
 
+/// Python bindings, built with `--features python`.
+#[cfg(feature = "python")]
+mod python_bindings;
+
 use checkers::{
     athena::Athena,
     checker_result::CheckResult,

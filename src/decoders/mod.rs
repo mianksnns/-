@@ -71,6 +71,12 @@ pub mod braille_decoder;
 /// The substitution_generic_decoder module handles generic substitution ciphers
 pub mod substitution_generic_decoder;
 
+/// The hash_crack_decoder module cracks hashes using a local wordlist
+pub mod hash_crack_decoder;
+
+/// The substitution_autocrack_decoder module automatically cracks substitution ciphers
+pub mod substitution_autocrack_decoder;
+
 /// A brainfuck interpreter
 pub mod brainfuck_interpreter;
 
@@ -104,6 +110,8 @@ use vigenere_decoder::VigenereDecoder;
 use z85_decoder::Z85Decoder;
 
 use brainfuck_interpreter::BrainfuckInterpreter;
+use hash_crack_decoder::HashCrackDecoder;
+use substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -157,6 +165,10 @@ pub enum DecoderType {
     BrailleDecoder(braille_decoder::BrailleDecoder),
     /// substitution decoder
     SubstitutionGenericDecoder(substitution_generic_decoder::SubstitutionGenericDecoder),
+    /// hash crack decoder
+    HashCrackDecoder(hash_crack_decoder::HashCrackDecoder),
+    /// substitution autocrack decoder
+    SubstitutionAutocrackDecoder(substitution_autocrack_decoder::SubstitutionAutocrackDecoder),
     /// brainfuck interpreter
     BrainfuckInterpreter(brainfuck_interpreter::BrainfuckInterpreter),
     /// vigenere decoder
@@ -246,6 +258,14 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "simplesubstitution",
             DecoderBox::new(Decoder::<SubstitutionGenericDecoder>::new()),
+        ),
+        (
+            "HashCrack",
+            DecoderBox::new(Decoder::<HashCrackDecoder>::new()),
+        ),
+        (
+            "substitution-autocrack",
+            DecoderBox::new(Decoder::<SubstitutionAutocrackDecoder>::new()),
         ),
         (
             "Brainfuck",

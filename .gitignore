@@ -23,3 +23,8 @@ doc/
 /.idea
 .aider*
 .cursor
+
+# Build artifacts
+/ciphey.so
+__pycache__/
+*.pyc

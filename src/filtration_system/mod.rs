@@ -35,6 +35,8 @@ use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
+use crate::decoders::hash_crack_decoder::HashCrackDecoder;
+use crate::decoders::substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -253,6 +255,8 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
     let brailledecoder = Decoder::<BrailleDecoder>::new();
     let substitution_generic = Decoder::<SubstitutionGenericDecoder>::new();
+    let hash_crack = Decoder::<HashCrackDecoder>::new();
+    let substitution_autocrack = Decoder::<SubstitutionAutocrackDecoder>::new();
 
     let brainfuck = Decoder::<BrainfuckInterpreter>::new();
 
@@ -281,6 +285,8 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(a1z26decoder),
             Box::new(brailledecoder),
             Box::new(substitution_generic),
+            Box::new(hash_crack),
+            Box::new(substitution_autocrack),
             Box::new(brainfuck),
         ],
     }

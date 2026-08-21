@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """ciphey_api.py - Core API wrapper around the ciphey decoding tool.
 
+Two backends are supported:
+
+1. Native PyO3 bindings (preferred). When the compiled extension module
+   `ciphey` (target/release/libciphey.so, built with
+   ``cargo build --release --features python``) is importable, decoding runs
+   entirely in-process with no subprocess and no output parsing.
+2. The ciphey CLI subprocess, used as a fallback. It invokes the binary with
+   ``--json`` and parses the JSON document.
+
 Usage:
     python3 ciphey_api.py "SGVsbG8gV29ybGQ="
     python3 ciphey_api.py --binary /path/to/ciphey --timeout 15 "your ciphertext"
@@ -14,10 +23,12 @@ Can also be imported and used as a library:
 """
 
 import argparse
+import importlib.util
 import json
 import re
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -40,6 +51,36 @@ class CipheyResult:
     plaintext: str = ""
     decoders: List[str] = field(default_factory=list)
     error: str = ""
+
+
+def _try_load_native_module() -> Optional[object]:
+    """Try to import the native PyO3 extension module.
+
+    Returns the module object, or None when it is not available. When present,
+    decoding uses the in-process bindings instead of spawning a subprocess.
+    """
+    # Try the on-disk build output first, then the regular import path.
+    candidates = ["ciphey"]
+    try:
+        module = importlib.import_module("ciphey")
+        if hasattr(module, "crack"):
+            return module
+    except ImportError:
+        pass
+
+    for name in candidates:
+        spec = importlib.util.find_spec(name)
+        if spec is not None:
+            try:
+                module = importlib.import_module(name)
+                if hasattr(module, "crack"):
+                    return module
+            except ImportError:
+                continue
+    return None
+
+
+_NATIVE_MODULE = _try_load_native_module()
 
 
 def _strip_ansi(text: str) -> str:
@@ -92,16 +133,42 @@ def ciphey_decrypt(
 ) -> CipheyResult:
     """Run ciphey on the given ciphertext and return a CipheyResult.
 
+    When the native PyO3 extension is importable it is used directly
+    (no subprocess). Otherwise the ciphey executable is invoked with ``--json``
+    and the output is parsed.
+
     Args:
         ciphertext: The encoded text to decode.
         binary: Name or path of the ciphey executable.
         timeout: Number of seconds ciphey is allowed to run.
         extra_args: Optional extra CLI flags for ciphey (e.g. ["--regex", "..."]).
+            Only used with the subprocess backend.
 
     Returns:
         A CipheyResult containing either the decoded plaintext and the
         decoders used, or an error description.
     """
+    # Native in-process path.
+    if _NATIVE_MODULE is not None and not extra_args:
+        try:
+            result = _NATIVE_MODULE.crack(ciphertext, timeout=timeout)
+            if result.success:
+                return CipheyResult(
+                    success=True,
+                    plaintext=result.plaintext or "",
+                    decoders=list(result.path),
+                )
+            return CipheyResult(
+                success=False,
+                error="ciphey could not decode the text within the timeout.",
+            )
+        except Exception as exc:  # noqa: BLE001 - fall back to the subprocess path
+            return CipheyResult(
+                success=False,
+                error=f"Native ciphey module failed: {exc}",
+            )
+
+    # Subprocess fallback.
     bin_path = _find_binary(binary)
     if bin_path is None:
         return CipheyResult(
@@ -159,6 +226,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    backend = "native (PyO3)" if _NATIVE_MODULE is not None else "subprocess"
     result = ciphey_decrypt(
         args.ciphertext,
         binary=args.binary,
@@ -171,6 +239,7 @@ def main() -> None:
             print(f"Decoders used: {' -> '.join(result.decoders)}")
     else:
         print(f"Failed to decode: {result.error}")
+    print(f"[backend: {backend}]")
 
 
 if __name__ == "__main__":

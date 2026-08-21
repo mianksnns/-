@@ -12,6 +12,11 @@ license = "MIT"
 name = "ciphey"
 path = "src/lib.rs"
 bench = false
+crate-type = ["rlib", "cdylib"]
+
+[features]
+default = []
+python = ["dep:pyo3"]
 
 [[bin]]
 name = "ciphey"
@@ -64,6 +69,18 @@ z85 = "3.0.7"
 brainfuck-exe = { version = "0.2.4", default-features = false }
 dashmap = "6.2.1"
 ahash = "0.8"
+md-5 = "0.10"
+sha1 = "0.10"
+sha2 = "0.10"
+sha3 = "0.10"
+crc32fast = "1.4"
+bcrypt = "0.15"
+argon2 = "0.5"
+scrypt = "0.11"
+des = "0.8"
+md4 = "0.11.0"
+digest = "0.10"
+pyo3 = { version = "0.29.2", default-features = false, features = ["extension-module", "abi3", "macros"], optional = true }
 
 # Dev dependencies
 [dev-dependencies]

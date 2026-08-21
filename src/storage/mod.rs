@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -16,6 +16,49 @@ pub const ENGLISH_FREQS: [f64; 26] = [
     0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758, // O-U
     0.00978, 0.02360, 0.00150, 0.01974, 0.00074, // V-Z
 ];
+
+/// Loads English bigram frequencies into a HashMap.
+/// The data file contains lines of the form `TH <count>`, where the count is
+/// the number of occurrences across a large English corpus. Frequencies are
+/// normalized to probabilities. Returns an empty map if the file cannot be
+/// read (in which case callers should fall back to unigram scoring).
+pub fn load_english_bigrams() -> HashMap<(char, char), f64> {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("storage")
+        .join("ngrams")
+        .join("english_bigrams.txt");
+
+    let mut bigrams: HashMap<(char, char), f64> = HashMap::new();
+    let mut total: f64 = 0.0;
+
+    let Ok(content) = fs::read_to_string(&path) else {
+        return bigrams;
+    };
+
+    let mut raw_counts: HashMap<(char, char), f64> = HashMap::new();
+    for line in content.lines() {
+        let mut parts = line.split_ascii_whitespace();
+        let (Some(pair), Some(count)) = (parts.next(), parts.next()) else {
+            continue;
+        };
+        let chars: Vec<char> = pair.chars().collect();
+        if chars.len() != 2 {
+            continue;
+        }
+        if let Ok(c) = count.parse::<f64>() {
+            raw_counts.insert((chars[0], chars[1]), c);
+            total += c;
+        }
+    }
+
+    if total > 0.0 {
+        for (pair, count) in raw_counts {
+            bigrams.insert(pair, count / total);
+        }
+    }
+    bigrams
+}
 
 /// Loads invisible character list into a HashSet
 pub static INVISIBLE_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
