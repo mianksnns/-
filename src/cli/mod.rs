@@ -38,6 +38,10 @@ pub struct Opts {
     /// Default is false
     #[arg(short, long)]
     api_mode: Option<bool>,
+    /// Output machine-readable JSON on stdout. Ideal for programmatic use.
+    /// Implies no ANSI colours and suppresses human-interactive prompts.
+    #[arg(long)]
+    json: bool,
     /// Opens a file for decoding
     /// Use instead of `--text`
     #[arg(short, long)]
@@ -136,6 +140,13 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
 
     if let Some(api_mode) = opts.api_mode {
         config.api_mode = api_mode;
+    }
+
+    if opts.json {
+        config.json_output = true;
+        // JSON output must be free of human interaction and colour
+        config.human_checker_on = false;
+        config.api_mode = true;
     }
 
     if let Some(regex) = opts.regex {

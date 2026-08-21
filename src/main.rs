@@ -1,11 +1,20 @@
 use ciphey::cli::parse_cli_args;
-use ciphey::cli_pretty_printing::{program_exiting_successful_decoding, success};
+use ciphey::cli_pretty_printing::{
+    json_decode_failure, json_decode_success, program_exiting_successful_decoding, success,
+};
 use ciphey::perform_cracking;
 
 fn main() {
     // Turn CLI arguments into a library object
     let (text, config) = parse_cli_args();
-    let result = perform_cracking(&text, config);
+    let result = perform_cracking(&text, config.clone());
+    if config.json_output {
+        match result {
+            Some(res) => json_decode_success(&res),
+            None => json_decode_failure(),
+        }
+        return;
+    }
     success(&format!(
         "DEBUG: main.rs - Result from perform_cracking: {:?}",
         result.is_some()

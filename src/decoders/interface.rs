@@ -63,6 +63,10 @@ impl Crack for Decoder<DefaultDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// All decoders will share the same Crack trait

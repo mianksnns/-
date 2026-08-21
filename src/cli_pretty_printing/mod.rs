@@ -411,6 +411,58 @@ pub fn failed_to_decode() {
     );
 }
 
+/// Prints a machine-readable JSON document describing a successful decode.
+///
+/// # Arguments
+/// * `result` - The DecoderResult containing the decoded text and metadata
+///
+/// # Output Schema
+/// ```json
+/// {
+///   "success": true,
+///   "plaintext": "...",
+///   "path": ["Base64", "Caesar"],
+///   "path_with_keys": [{"decoder": "...", "key": "..."}]
+/// }
+/// ```
+pub fn json_decode_success(result: &DecoderResult) {
+    let plaintext = result.text.first().cloned().unwrap_or_default();
+    let path: Vec<String> = result.path.iter().map(|c| c.decoder.to_string()).collect();
+    let path_with_keys: Vec<serde_json::Value> = result
+        .path
+        .iter()
+        .map(|c| {
+            serde_json::json!({
+                "decoder": c.decoder,
+                "key": c.key,
+                "checker": c.checker_name,
+            })
+        })
+        .collect();
+
+    let output = serde_json::json!({
+        "success": true,
+        "plaintext": plaintext,
+        "path": path,
+        "path_with_keys": path_with_keys,
+    });
+    println!("{}", serde_json::to_string(&output).unwrap_or_default());
+}
+
+/// Prints a machine-readable JSON document describing a failed decode.
+///
+/// # Output Schema
+/// ```json
+/// {"success": false, "error": "ciphey failed to decode the text within the configured timeout"}
+/// ```
+pub fn json_decode_failure() {
+    let output = serde_json::json!({
+        "success": false,
+        "error": "ciphey failed to decode the text within the configured timeout",
+    });
+    println!("{}", serde_json::to_string(&output).unwrap_or_default());
+}
+
 /// Updates the user on decoding progress with a countdown timer.
 ///
 /// # Arguments

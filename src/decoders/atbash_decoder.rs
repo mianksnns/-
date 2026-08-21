@@ -65,6 +65,10 @@ impl Crack for Decoder<AtbashDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Maps atbash to the alphabet

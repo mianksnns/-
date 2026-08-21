@@ -73,6 +73,10 @@ impl Crack for Decoder<ReverseDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 #[cfg(test)]

@@ -55,6 +55,37 @@ pub enum CheckerTypes {
     CheckWordlist(Checker<WordlistChecker>),
 }
 
+/// Macro that generates the sensitivity getters/setters for every checker
+/// variant, removing the repetitive hand-written match arms.
+///
+/// `with_sensitivity` clones the existing checker (reusing any configured
+/// fields such as the lemmeknow config) and only swaps the sensitivity.
+macro_rules! impl_sensitivity_delegates {
+    ($($variant:ident),* $(,)?) => {
+        /// Sets the sensitivity level for gibberish detection
+        pub fn with_sensitivity(&self, sensitivity: Sensitivity) -> Self {
+            match self {
+                $(
+                    CheckerTypes::$variant(checker) => {
+                        let mut new_checker = checker.clone();
+                        new_checker.sensitivity = sensitivity;
+                        CheckerTypes::$variant(new_checker)
+                    }
+                )*
+            }
+        }
+
+        /// Gets the current sensitivity level
+        pub fn get_sensitivity(&self) -> Sensitivity {
+            match self {
+                $(
+                    CheckerTypes::$variant(checker) => checker.get_sensitivity(),
+                )*
+            }
+        }
+    };
+}
+
 impl CheckerTypes {
     /// This functions calls appropriate check function of Checker
     pub fn check(&self, text: &str) -> CheckResult {
@@ -69,59 +100,15 @@ impl CheckerTypes {
         }
     }
 
-    /// Sets the sensitivity level for gibberish detection
-    pub fn with_sensitivity(&self, sensitivity: Sensitivity) -> Self {
-        match self {
-            CheckerTypes::CheckLemmeKnow(_checker) => {
-                let mut new_checker = Checker::<LemmeKnow>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckLemmeKnow(new_checker)
-            }
-            CheckerTypes::CheckEnglish(_checker) => {
-                let mut new_checker = Checker::<EnglishChecker>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckEnglish(new_checker)
-            }
-            CheckerTypes::CheckAthena(_checker) => {
-                let mut new_checker = Checker::<Athena>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckAthena(new_checker)
-            }
-            CheckerTypes::CheckWaitAthena(_checker) => {
-                let mut new_checker = Checker::<WaitAthena>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckWaitAthena(new_checker)
-            }
-            CheckerTypes::CheckRegex(_checker) => {
-                let mut new_checker = Checker::<RegexChecker>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckRegex(new_checker)
-            }
-            CheckerTypes::CheckPassword(_checker) => {
-                let mut new_checker = Checker::<PasswordChecker>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckPassword(new_checker)
-            }
-            CheckerTypes::CheckWordlist(_checker) => {
-                let mut new_checker = Checker::<WordlistChecker>::new();
-                new_checker.sensitivity = sensitivity;
-                CheckerTypes::CheckWordlist(new_checker)
-            }
-        }
-    }
-
-    /// Gets the current sensitivity level
-    pub fn get_sensitivity(&self) -> Sensitivity {
-        match self {
-            CheckerTypes::CheckLemmeKnow(checker) => checker.get_sensitivity(),
-            CheckerTypes::CheckEnglish(checker) => checker.get_sensitivity(),
-            CheckerTypes::CheckAthena(checker) => checker.get_sensitivity(),
-            CheckerTypes::CheckWaitAthena(checker) => checker.get_sensitivity(),
-            CheckerTypes::CheckRegex(checker) => checker.get_sensitivity(),
-            CheckerTypes::CheckPassword(checker) => checker.get_sensitivity(),
-            CheckerTypes::CheckWordlist(checker) => checker.get_sensitivity(),
-        }
-    }
+    impl_sensitivity_delegates!(
+        CheckLemmeKnow,
+        CheckEnglish,
+        CheckAthena,
+        CheckWaitAthena,
+        CheckRegex,
+        CheckPassword,
+        CheckWordlist,
+    );
 }
 
 /// Wrapper struct to hold Checkers for CHECKER_MAP

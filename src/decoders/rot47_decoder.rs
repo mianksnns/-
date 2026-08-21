@@ -79,6 +79,10 @@ impl Crack for Decoder<ROT47Decoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Maps rot47 to the alphabet (up to ROT94 with the ROT47 alphabet)

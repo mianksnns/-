@@ -78,6 +78,10 @@ impl Crack for Decoder<MorseCodeDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Replace new lines, line breaks, and other delimiters with the standard delimiter '/'

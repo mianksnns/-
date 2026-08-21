@@ -83,6 +83,10 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Decodes Citrix CTX1

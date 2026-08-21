@@ -89,6 +89,10 @@ impl Crack for Decoder<A1Z26Decoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// This function does the actual decoding

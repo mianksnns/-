@@ -85,6 +85,10 @@ impl Crack for Decoder<RailfenceDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Decodes a text encoded with the Rail Fence Cipher with the specified number of rails and offset

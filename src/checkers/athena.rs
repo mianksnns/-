@@ -5,6 +5,7 @@ use crate::{checkers::checker_result::CheckResult, cli_pretty_printing, config::
 use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 use log::trace;
+use once_cell::sync::Lazy;
 
 use super::{
     checker_type::{Check, Checker},
@@ -18,6 +19,15 @@ use super::{
 
 /// Athena checker runs all other checkers
 pub struct Athena;
+
+/// Cached checker instances so they are only created once.
+/// The inner checkers are stateless apart from `sensitivity`, so we reuse a
+/// base instance and clone it with the current sensitivity per check.
+static LEMMEKNOW_CHECKER: Lazy<Checker<LemmeKnow>> = Lazy::new(Checker::<LemmeKnow>::new);
+static PASSWORD_CHECKER: Lazy<Checker<PasswordChecker>> = Lazy::new(Checker::<PasswordChecker>::new);
+static ENGLISH_CHECKER: Lazy<Checker<EnglishChecker>> = Lazy::new(Checker::<EnglishChecker>::new);
+static REGEX_CHECKER: Lazy<Checker<RegexChecker>> = Lazy::new(Checker::<RegexChecker>::new);
+static WORDLIST_CHECKER: Lazy<Checker<WordlistChecker>> = Lazy::new(Checker::<WordlistChecker>::new);
 
 impl Check for Checker<Athena> {
     fn new() -> Self {
@@ -43,7 +53,7 @@ impl Check for Checker<Athena> {
         // If regex is specified, only run the regex checker
         if config.regex.is_some() {
             trace!("running regex");
-            let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);
+            let regex_checker = REGEX_CHECKER.clone().with_sensitivity(self.sensitivity);
             let regex_result = regex_checker.check(text);
             if regex_result.is_identified {
                 let mut check_res = CheckResult::new(&regex_checker);
@@ -62,8 +72,9 @@ impl Check for Checker<Athena> {
             // Run wordlist checker first if a wordlist is provided
             if config.wordlist.is_some() {
                 trace!("running wordlist checker");
-                let wordlist_checker =
-                    Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
+                let wordlist_checker = WORDLIST_CHECKER
+                    .clone()
+                    .with_sensitivity(self.sensitivity);
                 let wordlist_result = wordlist_checker.check(text);
                 if wordlist_result.is_identified {
                     let mut check_res = CheckResult::new(&wordlist_checker);
@@ -85,8 +96,7 @@ impl Check for Checker<Athena> {
 
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
-            // TODO: wrap all checkers in oncecell so we only create them once!
-            let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
+            let lemmeknow = LEMMEKNOW_CHECKER.clone().with_sensitivity(self.sensitivity);
             let lemmeknow_result = lemmeknow.check(text);
             //println!("Text is {}", text);
             if lemmeknow_result.is_identified {
@@ -103,7 +113,7 @@ impl Check for Checker<Athena> {
                 return check_res;
             }
 
-            let password = Checker::<PasswordChecker>::new().with_sensitivity(self.sensitivity);
+            let password = PASSWORD_CHECKER.clone().with_sensitivity(self.sensitivity);
             let password_result = password.check(text);
             if password_result.is_identified {
                 let mut check_res = CheckResult::new(&password);
@@ -119,7 +129,7 @@ impl Check for Checker<Athena> {
                 return check_res;
             }
 
-            let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
+            let english = ENGLISH_CHECKER.clone().with_sensitivity(self.sensitivity);
             let english_result = english.check(text);
             if english_result.is_identified {
                 let mut check_res = CheckResult::new(&english);

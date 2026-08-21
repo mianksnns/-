@@ -14,6 +14,7 @@ Can also be imported and used as a library:
 """
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
@@ -22,11 +23,6 @@ from typing import List, Optional
 
 # ANSI escape sequences used by ciphey for coloured output.
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
-
-# Markers emitted by ciphey in the CLI output (non API mode).
-PLAINTEXT_HEADER = "The plaintext is:"
-FAILURE_MARKER = "ciphey has failed to decode the text."
-ALREADY_PLAINTEXT_MARKER = "Your input text is the plaintext"
 
 
 @dataclass
@@ -57,40 +53,34 @@ def _find_binary(binary: str) -> Optional[str]:
     return None
 
 
-def _parse_output(stdout: str) -> CipheyResult:
-    """Parse ciphey CLI stdout into a CipheyResult."""
+def _parse_json_output(stdout: str) -> CipheyResult:
+    """Parse the JSON document emitted by ciphey --json into a CipheyResult."""
     text = _strip_ansi(stdout).strip()
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-
-    if FAILURE_MARKER in text:
+    # Locate the JSON document: it starts at the first '{'.
+    start = text.find("{")
+    if start == -1:
         return CipheyResult(
             success=False,
-            error="ciphey could not decode the text within the timeout.",
+            error=f"No JSON document found in ciphey output. Raw output:\n{text}",
+        )
+    try:
+        data = json.loads(text[start:])
+    except json.JSONDecodeError as exc:
+        return CipheyResult(
+            success=False,
+            error=f"Failed to parse ciphey JSON output: {exc}. Raw output:\n{text}",
         )
 
-    if PLAINTEXT_HEADER in text:
-        idx = lines.index(PLAINTEXT_HEADER)
-        if idx + 1 < len(lines):
-            plaintext = lines[idx + 1]
-        else:
-            plaintext = ""
-
-        decoders: List[str] = []
-        decoder_re = re.compile(r"the decoder[s]? used (?:is|are)\s*(.+)")
-        for line in lines[idx + 2 :]:
-            match = decoder_re.search(line)
-            if match:
-                decoders = [d.strip() for d in match.group(1).split("→")]
-                break
-
-        return CipheyResult(success=True, plaintext=plaintext, decoders=decoders)
-
-    if ALREADY_PLAINTEXT_MARKER in text:
-        return CipheyResult(success=True, error="Input is already plaintext.")
+    if data.get("success"):
+        return CipheyResult(
+            success=True,
+            plaintext=data.get("plaintext", ""),
+            decoders=[str(d) for d in data.get("path", [])],
+        )
 
     return CipheyResult(
         success=False,
-        error=f"Unrecognised ciphey output. Raw output:\n{text}",
+        error=data.get("error", "ciphey could not decode the text within the timeout."),
     )
 
 
@@ -122,7 +112,7 @@ def ciphey_decrypt(
             ),
         )
 
-    command = [bin_path, "-t", ciphertext, "-d"]
+    command = [bin_path, "-t", ciphertext, "-d", "--json"]
     if extra_args:
         command.extend(extra_args)
 
@@ -145,7 +135,7 @@ def ciphey_decrypt(
             error=f"Failed to run ciphey: {exc}",
         )
 
-    result = _parse_output(proc.stdout)
+    result = _parse_json_output(proc.stdout)
     if not result.success and proc.stderr.strip():
         result.error = f"{result.error}\n{_strip_ansi(proc.stderr).strip()}"
     return result

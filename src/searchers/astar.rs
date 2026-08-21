@@ -59,7 +59,7 @@ use crate::searchers::helper_functions::{
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
 
-/// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
+/// Threshold for pruning the seen_strings DashSet to prevent excessive memory usage
 const PRUNE_THRESHOLD: usize = 100000;
 
 /// Initial pruning threshold for dynamic adjustment
@@ -70,16 +70,6 @@ const MAX_DEPTH: u32 = 100;
 
 /// Number of nodes to process in parallel
 const PARALLEL_BATCH_SIZE: usize = 10;
-
-/// Calculate a hash for a string to use in the seen_strings set
-fn calculate_hash(text: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
-    let mut hasher = DefaultHasher::new();
-    text.hash(&mut hasher);
-    hasher.finish().to_string()
-}
 
 /// A* search node with priority based on f = g + h
 ///
@@ -187,7 +177,7 @@ impl ThreadSafePriorityQueue {
 /// Expands a single node and returns a vector of new nodes
 fn expand_node(
     current_node: &AStarNode,
-    seen_strings: &DashSet<String>,
+    seen_strings: &DashSet<String, ahash::RandomState>,
     stop: &Arc<AtomicBool>,
     _prune_threshold: usize,
 ) -> Vec<AStarNode> {
@@ -293,7 +283,7 @@ fn expand_node(
                     }
 
                     // Check if we've seen this string before to prevent cycles
-                    let text_hash = calculate_hash(&text[0]);
+                    let text_hash = text[0].clone();
                     if !seen_strings.insert(text_hash) {
                         update_decoder_stats(r.decoder, false);
                         continue;
@@ -371,7 +361,7 @@ fn expand_node(
                     }
 
                     // Check if we've seen this string before
-                    let text_hash = calculate_hash(first_text);
+                    let text_hash = first_text.clone();
                     if !seen_strings.insert(text_hash) {
                         update_decoder_stats(decoder.get_name(), false);
                         continue;
@@ -449,8 +439,10 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     };
 
     // Thread-safe set to track visited states to prevent cycles
-    let seen_strings = DashSet::new();
-    let seen_results = DashSet::new(); // Track unique results
+    // Using ahash (a faster hasher than the default SipHash) for performance
+    let seen_strings = DashSet::with_hasher(ahash::RandomState::new());
+    let seen_results: DashSet<String, ahash::RandomState> =
+        DashSet::with_hasher(ahash::RandomState::new()); // Track unique results
     let _seen_count = Arc::new(AtomicUsize::new(0));
 
     // Thread-safe priority queue for open set
@@ -501,7 +493,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     debug!("DEBUG: Checking result node");
                     // Check if we've already processed this result
                     if let Some(text) = node.state.text.first() {
-                        let result_hash = calculate_hash(text);
+                        let result_hash = text.clone();
                         if !seen_results.insert(result_hash) {
                             debug!("DEBUG: Skipping duplicate result: {:?}", text);
                             continue; // Skip this result, we've already processed it

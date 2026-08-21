@@ -99,6 +99,10 @@ impl Crack for Decoder<CaesarDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Caesar cipher to rotate cipher text by shift and return an owned String.

@@ -56,6 +56,10 @@ pub struct Config {
     /// This is used to determine if we should print to stdout
     /// Or return the values
     pub api_mode: bool,
+    /// Should the program output machine-readable JSON?
+    /// When enabled, all CLI output is replaced by a single JSON document
+    /// on stdout, making the output stable for programmatic consumers.
+    pub json_output: bool,
     /// Regex enables the user to search for a specific regex or crib
     pub regex: Option<String>,
     /// Path to the wordlist file. Will be overridden by CLI argument if provided.
@@ -69,6 +73,31 @@ pub struct Config {
     pub enhanced_detection: bool,
     /// Path to the enhanced detection model. If None, will use the default path.
     pub model_path: Option<String>,
+}
+
+impl Clone for Config {
+    fn clone(&self) -> Self {
+        Config {
+            verbose: self.verbose,
+            lemmeknow_config: make_identifier_from_config(self),
+            lemmeknow_min_rarity: self.lemmeknow_min_rarity,
+            lemmeknow_max_rarity: self.lemmeknow_max_rarity,
+            lemmeknow_tags: self.lemmeknow_tags.clone(),
+            lemmeknow_exclude_tags: self.lemmeknow_exclude_tags.clone(),
+            lemmeknow_boundaryless: self.lemmeknow_boundaryless,
+            human_checker_on: self.human_checker_on,
+            timeout: self.timeout,
+            top_results: self.top_results,
+            api_mode: self.api_mode,
+            json_output: self.json_output,
+            regex: self.regex.clone(),
+            wordlist_path: self.wordlist_path.clone(),
+            wordlist: self.wordlist.clone(),
+            colourscheme: self.colourscheme.clone(),
+            enhanced_detection: self.enhanced_detection,
+            model_path: self.model_path.clone(),
+        }
+    }
 }
 
 /// Cell for storing global Config
@@ -126,6 +155,7 @@ impl Default for Config {
             timeout: 5,
             top_results: false,
             api_mode: false,
+            json_output: false,
             regex: None,
             wordlist_path: None,
             wordlist: None,
@@ -219,6 +249,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "timeout",
             "top_results",
             "api_mode",
+            "json_output",
             "regex",
             "wordlist_path",
             "question",

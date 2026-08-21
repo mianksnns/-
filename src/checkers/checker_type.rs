@@ -59,6 +59,32 @@ impl<Type> CheckInfo for Checker<Type> {
     }
 }
 
+/// Manual Clone implementation because `lemmeknow::Identifier` does not
+/// implement Clone upstream. All fields are cheap to copy except the vectors.
+impl<Type> Clone for Checker<Type> {
+    fn clone(&self) -> Self {
+        Checker {
+            name: self.name,
+            description: self.description,
+            link: self.link,
+            tags: self.tags.clone(),
+            expected_runtime: self.expected_runtime,
+            popularity: self.popularity,
+            lemmeknow_config: Identifier {
+                min_rarity: self.lemmeknow_config.min_rarity,
+                max_rarity: self.lemmeknow_config.max_rarity,
+                tags: self.lemmeknow_config.tags.clone(),
+                exclude_tags: self.lemmeknow_config.exclude_tags.clone(),
+                boundaryless: self.lemmeknow_config.boundaryless,
+                file_support: self.lemmeknow_config.file_support,
+            },
+            sensitivity: self.sensitivity,
+            enhanced_detector: self.enhanced_detector,
+            _phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// Every checker must implement this trait
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.

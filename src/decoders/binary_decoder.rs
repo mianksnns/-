@@ -70,6 +70,10 @@ impl Crack for Decoder<BinaryDecoder> {
     fn get_link(&self) -> &str {
         self.link
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// Decodes binary to string

@@ -153,6 +153,7 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 /// 2. Adaptive depth penalty (higher heuristic for deeper paths, with increasing penalty as depth grows)
 /// 3. String quality component (higher heuristic for lower quality strings)
 /// 4. Uncommon sequence penalty (higher heuristic for uncommon decoder sequences)
+/// 5. Cipher identification (lower heuristic when the text resembles a known cipher)
 ///
 /// # Parameters
 ///
@@ -202,7 +203,39 @@ pub fn generate_heuristic(
         }
     }
 
+    // 5. Cipher identification component
+    // If the text statistically resembles a known classical cipher, nudge the
+    // search towards exploring further decodings of it. Lower cipher score is
+    // a better match, so a good match lowers the overall heuristic.
+    let cipher_component = get_cipher_identification_heuristic(text);
+    base_score += cipher_component;
+
     base_score
+}
+
+/// Returns a small heuristic bonus derived from statistical cipher identification.
+///
+/// Uses `cipher_identifier::identify_cipher`, which scores how closely a text
+/// matches known classical ciphers (lower score = better match). The result is
+/// normalised into a small [0.0, 0.3] range so it influences but does not
+/// dominate the overall heuristic.
+///
+/// Very short texts (below 8 characters) do not carry enough statistical
+/// signal, so they get a neutral score.
+pub fn get_cipher_identification_heuristic(text: &str) -> f32 {
+    if text.len() < 8 {
+        return 0.15;
+    }
+
+    let results = cipher_identifier::identify_cipher(text, 1, None);
+    if let Some((_, best_score)) = results.first() {
+        // best_score is a z-score: lower is a stronger match.
+        // Map [0, +inf) into [0, 1), then scale to a small weight.
+        let normalized = 1.0_f64 - 1.0 / (1.0 + best_score);
+        normalized as f32 * 0.3
+    } else {
+        0.15
+    }
 }
 
 /// Determines if a string is too short to be meaningfully decoded
