@@ -24,10 +24,12 @@ pub struct Athena;
 /// The inner checkers are stateless apart from `sensitivity`, so we reuse a
 /// base instance and clone it with the current sensitivity per check.
 static LEMMEKNOW_CHECKER: Lazy<Checker<LemmeKnow>> = Lazy::new(Checker::<LemmeKnow>::new);
-static PASSWORD_CHECKER: Lazy<Checker<PasswordChecker>> = Lazy::new(Checker::<PasswordChecker>::new);
+static PASSWORD_CHECKER: Lazy<Checker<PasswordChecker>> =
+    Lazy::new(Checker::<PasswordChecker>::new);
 static ENGLISH_CHECKER: Lazy<Checker<EnglishChecker>> = Lazy::new(Checker::<EnglishChecker>::new);
 static REGEX_CHECKER: Lazy<Checker<RegexChecker>> = Lazy::new(Checker::<RegexChecker>::new);
-static WORDLIST_CHECKER: Lazy<Checker<WordlistChecker>> = Lazy::new(Checker::<WordlistChecker>::new);
+static WORDLIST_CHECKER: Lazy<Checker<WordlistChecker>> =
+    Lazy::new(Checker::<WordlistChecker>::new);
 
 impl Check for Checker<Athena> {
     fn new() -> Self {
@@ -72,9 +74,7 @@ impl Check for Checker<Athena> {
             // Run wordlist checker first if a wordlist is provided
             if config.wordlist.is_some() {
                 trace!("running wordlist checker");
-                let wordlist_checker = WORDLIST_CHECKER
-                    .clone()
-                    .with_sensitivity(self.sensitivity);
+                let wordlist_checker = WORDLIST_CHECKER.clone().with_sensitivity(self.sensitivity);
                 let wordlist_result = wordlist_checker.check(text);
                 if wordlist_result.is_identified {
                     let mut check_res = CheckResult::new(&wordlist_checker);
