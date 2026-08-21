@@ -69,7 +69,7 @@ z85 = "3.0.7"
 brainfuck-exe = { version = "0.2.4", default-features = false }
 dashmap = "6.2.1"
 ahash = "0.8"
-md-5 = "0.10"
+md-5 = "0.11"
 sha1 = "0.10"
 sha2 = "0.11"
 sha3 = "0.10"
