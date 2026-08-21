@@ -180,7 +180,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     }
 
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
-    if initial_check_for_plaintext.is_identified {
+    if initial_check_for_plaintext.is_identified && !looks_like_crackable_hash(&text) {
         debug!(
             "The input text provided to the program {} is the plaintext. Returning early.",
             text
@@ -258,6 +258,14 @@ fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
         let athena_checker = Checker::<Athena>::new();
         athena_checker.check(text)
     }
+}
+
+/// Returns true when the input looks like a hash we can crack. Such inputs are
+/// routed into the A* search so the HashCrack decoder gets a chance, rather than
+/// being short-circuited by a false-positive plaintext match (e.g. LemmeKnow
+/// misidentifying a 40-char SHA1 digest as an API token).
+fn looks_like_crackable_hash(text: &str) -> bool {
+    !crate::decoders::hash_crack_decoder::detect_hash_algorithm(text).is_empty()
 }
 
 /// Stores a successful DecoderResult into the cache table

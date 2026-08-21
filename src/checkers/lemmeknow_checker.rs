@@ -29,8 +29,26 @@ impl Check for Checker<LemmeKnow> {
         let mut is_identified = false;
         let mut description = "".to_string();
         if !lemmeknow_result.is_empty() {
-            is_identified = true;
-            description = format_data_result(&lemmeknow_result[0].data)
+            // A credential/secret match (e.g. LemmeKnow misreading a SHA1 digest
+            // as a "Bitly Secret Key") is not evidence that the text is
+            // plaintext. Such inputs are routed to the hash cracker instead.
+            let is_secret_like = lemmeknow_result.iter().any(|m| {
+                m.data.tags.iter().any(|t| {
+                    matches!(
+                        *t,
+                        "API Keys"
+                            | "Credentials"
+                            | "Secret Key"
+                            | "Secrets"
+                            | "Passwords"
+                            | "Password"
+                    )
+                })
+            });
+            if !is_secret_like {
+                is_identified = true;
+                description = format_data_result(&lemmeknow_result[0].data)
+            }
         }
 
         CheckResult {
@@ -70,6 +88,16 @@ mod tests {
     fn test_url_exact_match() {
         let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
         assert!(checker.check("https://google.com").is_identified);
+    }
+
+    #[test]
+    fn test_sha1_digest_not_identified_as_plaintext() {
+        // LemmeKnow used to misread a 40-char SHA1 digest as a "Bitly Secret
+        // Key" / "API token", which short-circuited the hash cracker. Credential
+        // matches must not be treated as plaintext evidence.
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        let sha1_of_password = "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8";
+        assert!(!checker.check(sha1_of_password).is_identified);
     }
 
     #[test]

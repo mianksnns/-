@@ -152,7 +152,7 @@ pub struct HashCrackDecoder;
 
 /// The hash algorithms this decoder can crack.
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum HashAlgorithm {
+pub enum HashAlgorithm {
     Md5,
     Sha1,
     Sha256,
@@ -271,7 +271,7 @@ impl Crack for Decoder<HashCrackDecoder> {
 
 /// Detect which hash algorithm(s) could match the given text.
 /// Returns an empty vec if the text does not look like any supported hash.
-fn detect_hash_algorithm(hash: &str) -> Vec<HashAlgorithm> {
+pub fn detect_hash_algorithm(hash: &str) -> Vec<HashAlgorithm> {
     let trimmed = hash.trim();
 
     // Modular hash formats (bcrypt, argon2, scrypt) are self-identifying.

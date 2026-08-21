@@ -56,6 +56,18 @@ impl Crack for Decoder<HexadecimalDecoder> {
             return results;
         }
 
+        // Reject decodes that contain control characters. These are binary
+        // payloads (e.g. raw hash digests decoded as Latin-1) rather than
+        // readable plaintext, and would otherwise trigger a false-positive
+        // plaintext match from the checker.
+        if decoded_text.chars().any(char::is_control) {
+            trace!(
+                "Rejecting hexadecimal decode with control characters: {:?}",
+                decoded_text
+            );
+            return results;
+        }
+
         let checker_result = checker.check(&decoded_text);
         results.unencrypted_text = Some(vec![decoded_text]);
 
