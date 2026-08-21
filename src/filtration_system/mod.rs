@@ -34,9 +34,18 @@ use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
+use crate::decoders::base32hex_decoder::Base32HexDecoder;
+use crate::decoders::base62_decoder::Base62Decoder;
+use crate::decoders::base64url_decoder::Base64UrlDecoder;
+use crate::decoders::base85_decoder::Base85Decoder;
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
+use crate::decoders::compression_decoder::CompressionDecoder;
 use crate::decoders::hash_crack_decoder::HashCrackDecoder;
+use crate::decoders::html_entities_decoder::HtmlEntitiesDecoder;
 use crate::decoders::substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
+use crate::decoders::unicode_escape_decoder::UnicodeEscapeDecoder;
+use crate::decoders::xor_repeating_decoder::XorRepeatingDecoder;
+use crate::decoders::xor_single_byte_decoder::XorSingleByteDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -259,6 +268,15 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let substitution_autocrack = Decoder::<SubstitutionAutocrackDecoder>::new();
 
     let brainfuck = Decoder::<BrainfuckInterpreter>::new();
+    let xor_single_byte = Decoder::<XorSingleByteDecoder>::new();
+    let xor_repeating = Decoder::<XorRepeatingDecoder>::new();
+    let compression = Decoder::<CompressionDecoder>::new();
+    let base62 = Decoder::<Base62Decoder>::new();
+    let base85 = Decoder::<Base85Decoder>::new();
+    let base32hex = Decoder::<Base32HexDecoder>::new();
+    let base64url = Decoder::<Base64UrlDecoder>::new();
+    let html_entities = Decoder::<HtmlEntitiesDecoder>::new();
+    let unicode_escape = Decoder::<UnicodeEscapeDecoder>::new();
 
     Decoders {
         components: vec![
@@ -288,6 +306,15 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(hash_crack),
             Box::new(substitution_autocrack),
             Box::new(brainfuck),
+            Box::new(xor_single_byte),
+            Box::new(xor_repeating),
+            Box::new(compression),
+            Box::new(base62),
+            Box::new(base85),
+            Box::new(base32hex),
+            Box::new(base64url),
+            Box::new(html_entities),
+            Box::new(unicode_escape),
         ],
     }
 }

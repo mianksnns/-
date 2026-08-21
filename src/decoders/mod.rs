@@ -83,6 +83,33 @@ pub mod brainfuck_interpreter;
 /// The vigenere_decoder module decodes Vigenère cipher text
 pub mod vigenere_decoder;
 
+/// The xor_single_byte_decoder module brute-forces single-byte XOR ciphers
+pub mod xor_single_byte_decoder;
+
+/// The xor_repeating_decoder module cracks repeating-key XOR ciphers
+pub mod xor_repeating_decoder;
+
+/// The compression_decoder module detects and decompresses compressed data
+pub mod compression_decoder;
+
+/// The base62_decoder module decodes base62
+pub mod base62_decoder;
+
+/// The base85_decoder module decodes base85 (Ascii85)
+pub mod base85_decoder;
+
+/// The base32hex_decoder module decodes base32hex
+pub mod base32hex_decoder;
+
+/// The base64url_decoder module decodes base64url
+pub mod base64url_decoder;
+
+/// The html_entities_decoder module decodes HTML/XML entities
+pub mod html_entities_decoder;
+
+/// The unicode_escape_decoder module decodes unicode escape sequences
+pub mod unicode_escape_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -109,9 +136,18 @@ use url_decoder::URLDecoder;
 use vigenere_decoder::VigenereDecoder;
 use z85_decoder::Z85Decoder;
 
+use base32hex_decoder::Base32HexDecoder;
+use base62_decoder::Base62Decoder;
+use base64url_decoder::Base64UrlDecoder;
+use base85_decoder::Base85Decoder;
 use brainfuck_interpreter::BrainfuckInterpreter;
+use compression_decoder::CompressionDecoder;
 use hash_crack_decoder::HashCrackDecoder;
+use html_entities_decoder::HtmlEntitiesDecoder;
 use substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
+use unicode_escape_decoder::UnicodeEscapeDecoder;
+use xor_repeating_decoder::XorRepeatingDecoder;
+use xor_single_byte_decoder::XorSingleByteDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -173,6 +209,24 @@ pub enum DecoderType {
     BrainfuckInterpreter(brainfuck_interpreter::BrainfuckInterpreter),
     /// vigenere decoder
     VigenereDecoder(vigenere_decoder::VigenereDecoder),
+    /// xor single byte decoder
+    XorSingleByteDecoder(xor_single_byte_decoder::XorSingleByteDecoder),
+    /// xor repeating decoder
+    XorRepeatingDecoder(xor_repeating_decoder::XorRepeatingDecoder),
+    /// compression decoder
+    CompressionDecoder(compression_decoder::CompressionDecoder),
+    /// base62 decoder
+    Base62Decoder(base62_decoder::Base62Decoder),
+    /// base85 decoder
+    Base85Decoder(base85_decoder::Base85Decoder),
+    /// base32hex decoder
+    Base32HexDecoder(base32hex_decoder::Base32HexDecoder),
+    /// base64url decoder
+    Base64UrlDecoder(base64url_decoder::Base64UrlDecoder),
+    /// html entities decoder
+    HtmlEntitiesDecoder(html_entities_decoder::HtmlEntitiesDecoder),
+    /// unicode escape decoder
+    UnicodeEscapeDecoder(unicode_escape_decoder::UnicodeEscapeDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -270,6 +324,36 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "Brainfuck",
             DecoderBox::new(Decoder::<BrainfuckInterpreter>::new()),
+        ),
+        (
+            "xor-single-byte",
+            DecoderBox::new(Decoder::<XorSingleByteDecoder>::new()),
+        ),
+        (
+            "xor-repeating",
+            DecoderBox::new(Decoder::<XorRepeatingDecoder>::new()),
+        ),
+        (
+            "compression",
+            DecoderBox::new(Decoder::<CompressionDecoder>::new()),
+        ),
+        ("Base62", DecoderBox::new(Decoder::<Base62Decoder>::new())),
+        ("Base85", DecoderBox::new(Decoder::<Base85Decoder>::new())),
+        (
+            "Base32hex",
+            DecoderBox::new(Decoder::<Base32HexDecoder>::new()),
+        ),
+        (
+            "Base64url",
+            DecoderBox::new(Decoder::<Base64UrlDecoder>::new()),
+        ),
+        (
+            "HTML entities",
+            DecoderBox::new(Decoder::<HtmlEntitiesDecoder>::new()),
+        ),
+        (
+            "Unicode escape",
+            DecoderBox::new(Decoder::<UnicodeEscapeDecoder>::new()),
         ),
     ])
 });
