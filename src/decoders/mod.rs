@@ -128,6 +128,30 @@ pub mod porta_decoder;
 /// The nihilist_decoder module decodes nihilist ciphers
 pub mod nihilist_decoder;
 
+/// The polybius_decoder module decodes Polybius square ciphers
+pub mod polybius_decoder;
+
+/// The bifid_decoder module decodes Bifid ciphers
+pub mod bifid_decoder;
+
+/// The trifid_decoder module decodes Trifid ciphers
+pub mod trifid_decoder;
+
+/// The hill_decoder module decodes Hill ciphers
+pub mod hill_decoder;
+
+/// The playfair_decoder module decodes Playfair ciphers
+pub mod playfair_decoder;
+
+/// The four_square_decoder module decodes Four-square ciphers
+pub mod four_square_decoder;
+
+/// The two_square_decoder module decodes Two-square ciphers
+pub mod two_square_decoder;
+
+/// The adfgvx_decoder module decodes ADFGVX ciphers
+pub mod adfgvx_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -173,6 +197,15 @@ use beaufort_decoder::BeaufortDecoder;
 use gronsfeld_decoder::GronsfeldDecoder;
 use nihilist_decoder::NihilistDecoder;
 use porta_decoder::PortaDecoder;
+
+use adfgvx_decoder::AdfgvxDecoder;
+use bifid_decoder::BifidDecoder;
+use four_square_decoder::FourSquareDecoder;
+use hill_decoder::HillDecoder;
+use playfair_decoder::PlayfairDecoder;
+use polybius_decoder::PolybiusDecoder;
+use trifid_decoder::TrifidDecoder;
+use two_square_decoder::TwoSquareDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -264,6 +297,22 @@ pub enum DecoderType {
     PortaDecoder(porta_decoder::PortaDecoder),
     /// nihilist decoder
     NihilistDecoder(nihilist_decoder::NihilistDecoder),
+    /// polybius decoder
+    PolybiusDecoder(polybius_decoder::PolybiusDecoder),
+    /// bifid decoder
+    BifidDecoder(bifid_decoder::BifidDecoder),
+    /// trifid decoder
+    TrifidDecoder(trifid_decoder::TrifidDecoder),
+    /// hill decoder
+    HillDecoder(hill_decoder::HillDecoder),
+    /// playfair decoder
+    PlayfairDecoder(playfair_decoder::PlayfairDecoder),
+    /// four-square decoder
+    FourSquareDecoder(four_square_decoder::FourSquareDecoder),
+    /// two-square decoder
+    TwoSquareDecoder(two_square_decoder::TwoSquareDecoder),
+    /// adfgvx decoder
+    AdfgvxDecoder(adfgvx_decoder::AdfgvxDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -407,5 +456,25 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             "Nihilist",
             DecoderBox::new(Decoder::<NihilistDecoder>::new()),
         ),
+        (
+            "Polybius",
+            DecoderBox::new(Decoder::<PolybiusDecoder>::new()),
+        ),
+        ("Bifid", DecoderBox::new(Decoder::<BifidDecoder>::new())),
+        ("Trifid", DecoderBox::new(Decoder::<TrifidDecoder>::new())),
+        ("Hill", DecoderBox::new(Decoder::<HillDecoder>::new())),
+        (
+            "Playfair",
+            DecoderBox::new(Decoder::<PlayfairDecoder>::new()),
+        ),
+        (
+            "Four-square",
+            DecoderBox::new(Decoder::<FourSquareDecoder>::new()),
+        ),
+        (
+            "Two-square",
+            DecoderBox::new(Decoder::<TwoSquareDecoder>::new()),
+        ),
+        ("ADFGVX", DecoderBox::new(Decoder::<AdfgvxDecoder>::new())),
     ])
 });

@@ -54,6 +54,15 @@ use crate::decoders::gronsfeld_decoder::GronsfeldDecoder;
 use crate::decoders::nihilist_decoder::NihilistDecoder;
 use crate::decoders::porta_decoder::PortaDecoder;
 
+use crate::decoders::adfgvx_decoder::AdfgvxDecoder;
+use crate::decoders::bifid_decoder::BifidDecoder;
+use crate::decoders::four_square_decoder::FourSquareDecoder;
+use crate::decoders::hill_decoder::HillDecoder;
+use crate::decoders::playfair_decoder::PlayfairDecoder;
+use crate::decoders::polybius_decoder::PolybiusDecoder;
+use crate::decoders::trifid_decoder::TrifidDecoder;
+use crate::decoders::two_square_decoder::TwoSquareDecoder;
+
 use log::trace;
 use rayon::prelude::*;
 
@@ -292,6 +301,15 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let porta = Decoder::<PortaDecoder>::new();
     let nihilist = Decoder::<NihilistDecoder>::new();
 
+    let polybius = Decoder::<PolybiusDecoder>::new();
+    let bifid = Decoder::<BifidDecoder>::new();
+    let trifid = Decoder::<TrifidDecoder>::new();
+    let hill = Decoder::<HillDecoder>::new();
+    let playfair = Decoder::<PlayfairDecoder>::new();
+    let four_square = Decoder::<FourSquareDecoder>::new();
+    let two_square = Decoder::<TwoSquareDecoder>::new();
+    let adfgvx = Decoder::<AdfgvxDecoder>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -335,6 +353,14 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(gronsfeld),
             Box::new(porta),
             Box::new(nihilist),
+            Box::new(polybius),
+            Box::new(bifid),
+            Box::new(trifid),
+            Box::new(hill),
+            Box::new(playfair),
+            Box::new(four_square),
+            Box::new(two_square),
+            Box::new(adfgvx),
         ],
     }
 }
