@@ -55,11 +55,16 @@ use crate::decoders::nihilist_decoder::NihilistDecoder;
 use crate::decoders::porta_decoder::PortaDecoder;
 
 use crate::decoders::adfgvx_decoder::AdfgvxDecoder;
+use crate::decoders::bacon_decoder::BaconDecoder;
 use crate::decoders::bifid_decoder::BifidDecoder;
 use crate::decoders::four_square_decoder::FourSquareDecoder;
 use crate::decoders::hill_decoder::HillDecoder;
+use crate::decoders::leet_decoder::LeetDecoder;
+use crate::decoders::nato_decoder::NatoDecoder;
+use crate::decoders::pigpen_decoder::PigpenDecoder;
 use crate::decoders::playfair_decoder::PlayfairDecoder;
 use crate::decoders::polybius_decoder::PolybiusDecoder;
+use crate::decoders::tap_code_decoder::TapCodeDecoder;
 use crate::decoders::trifid_decoder::TrifidDecoder;
 use crate::decoders::two_square_decoder::TwoSquareDecoder;
 
@@ -310,6 +315,12 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let two_square = Decoder::<TwoSquareDecoder>::new();
     let adfgvx = Decoder::<AdfgvxDecoder>::new();
 
+    let bacon = Decoder::<BaconDecoder>::new();
+    let leet = Decoder::<LeetDecoder>::new();
+    let nato = Decoder::<NatoDecoder>::new();
+    let pigpen = Decoder::<PigpenDecoder>::new();
+    let tap_code = Decoder::<TapCodeDecoder>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -361,6 +372,11 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(four_square),
             Box::new(two_square),
             Box::new(adfgvx),
+            Box::new(bacon),
+            Box::new(leet),
+            Box::new(nato),
+            Box::new(pigpen),
+            Box::new(tap_code),
         ],
     }
 }

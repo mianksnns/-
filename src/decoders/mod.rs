@@ -152,6 +152,21 @@ pub mod two_square_decoder;
 /// The adfgvx_decoder module decodes ADFGVX ciphers
 pub mod adfgvx_decoder;
 
+/// The bacon_decoder module decodes Bacon's ciphers
+pub mod bacon_decoder;
+
+/// The leet_decoder module decodes leetspeak
+pub mod leet_decoder;
+
+/// The nato_decoder module decodes NATO phonetic alphabet messages
+pub mod nato_decoder;
+
+/// The pigpen_decoder module decodes Pigpen ciphers
+pub mod pigpen_decoder;
+
+/// The tap_code_decoder module decodes Tap code messages
+pub mod tap_code_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -199,11 +214,16 @@ use nihilist_decoder::NihilistDecoder;
 use porta_decoder::PortaDecoder;
 
 use adfgvx_decoder::AdfgvxDecoder;
+use bacon_decoder::BaconDecoder;
 use bifid_decoder::BifidDecoder;
 use four_square_decoder::FourSquareDecoder;
 use hill_decoder::HillDecoder;
+use leet_decoder::LeetDecoder;
+use nato_decoder::NatoDecoder;
+use pigpen_decoder::PigpenDecoder;
 use playfair_decoder::PlayfairDecoder;
 use polybius_decoder::PolybiusDecoder;
+use tap_code_decoder::TapCodeDecoder;
 use trifid_decoder::TrifidDecoder;
 use two_square_decoder::TwoSquareDecoder;
 
@@ -313,6 +333,16 @@ pub enum DecoderType {
     TwoSquareDecoder(two_square_decoder::TwoSquareDecoder),
     /// adfgvx decoder
     AdfgvxDecoder(adfgvx_decoder::AdfgvxDecoder),
+    /// bacon decoder
+    BaconDecoder(bacon_decoder::BaconDecoder),
+    /// leet decoder
+    LeetDecoder(leet_decoder::LeetDecoder),
+    /// nato decoder
+    NatoDecoder(nato_decoder::NatoDecoder),
+    /// pigpen decoder
+    PigpenDecoder(pigpen_decoder::PigpenDecoder),
+    /// tap code decoder
+    TapCodeDecoder(tap_code_decoder::TapCodeDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -476,5 +506,19 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             DecoderBox::new(Decoder::<TwoSquareDecoder>::new()),
         ),
         ("ADFGVX", DecoderBox::new(Decoder::<AdfgvxDecoder>::new())),
+        (
+            "Bacon's cipher",
+            DecoderBox::new(Decoder::<BaconDecoder>::new()),
+        ),
+        ("Leet", DecoderBox::new(Decoder::<LeetDecoder>::new())),
+        (
+            "NATO phonetic",
+            DecoderBox::new(Decoder::<NatoDecoder>::new()),
+        ),
+        ("Pigpen", DecoderBox::new(Decoder::<PigpenDecoder>::new())),
+        (
+            "Tap code",
+            DecoderBox::new(Decoder::<TapCodeDecoder>::new()),
+        ),
     ])
 });
