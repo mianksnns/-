@@ -142,14 +142,11 @@ fn build_square(keyword: &str) -> [[char; 5]; 5] {
 
 /// Find the (row, col) position of a letter in the square.
 fn find_pos(square: &[[char; 5]; 5], c: char) -> (usize, usize) {
-    for r in 0..5 {
-        for col in 0..5 {
-            if square[r][col] == c {
-                return (r, col);
-            }
-        }
-    }
-    panic!("letter {c} not in Playfair square");
+    square
+        .iter()
+        .enumerate()
+        .find_map(|(r, row)| row.iter().position(|&x| x == c).map(|col| (r, col)))
+        .unwrap_or_else(|| panic!("letter {c} not in Playfair square"))
 }
 
 /// Decrypt a Playfair ciphertext with the given keyword. Returns an empty

@@ -57,6 +57,8 @@ use crate::decoders::porta_decoder::PortaDecoder;
 use crate::decoders::adfgvx_decoder::AdfgvxDecoder;
 use crate::decoders::bacon_decoder::BaconDecoder;
 use crate::decoders::bifid_decoder::BifidDecoder;
+use crate::decoders::chaocipher_decoder::ChaocipherDecoder;
+use crate::decoders::enigma_decoder::EnigmaDecoder;
 use crate::decoders::four_square_decoder::FourSquareDecoder;
 use crate::decoders::hill_decoder::HillDecoder;
 use crate::decoders::leet_decoder::LeetDecoder;
@@ -64,6 +66,7 @@ use crate::decoders::nato_decoder::NatoDecoder;
 use crate::decoders::pigpen_decoder::PigpenDecoder;
 use crate::decoders::playfair_decoder::PlayfairDecoder;
 use crate::decoders::polybius_decoder::PolybiusDecoder;
+use crate::decoders::straddling_checkerboard_decoder::StraddlingCheckerboardDecoder;
 use crate::decoders::tap_code_decoder::TapCodeDecoder;
 use crate::decoders::trifid_decoder::TrifidDecoder;
 use crate::decoders::two_square_decoder::TwoSquareDecoder;
@@ -321,6 +324,10 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let pigpen = Decoder::<PigpenDecoder>::new();
     let tap_code = Decoder::<TapCodeDecoder>::new();
 
+    let chaocipher = Decoder::<ChaocipherDecoder>::new();
+    let enigma = Decoder::<EnigmaDecoder>::new();
+    let straddling = Decoder::<StraddlingCheckerboardDecoder>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -377,6 +384,9 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(nato),
             Box::new(pigpen),
             Box::new(tap_code),
+            Box::new(chaocipher),
+            Box::new(enigma),
+            Box::new(straddling),
         ],
     }
 }

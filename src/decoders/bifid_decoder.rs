@@ -118,6 +118,11 @@ impl Crack for Decoder<BifidDecoder> {
 /// Decrypt a Bifid ciphertext using the standard alphabet square and the given
 /// period (block length). Returns an empty string when the input cannot be
 /// decrypted.
+///
+/// # Panics
+///
+/// This function never panics: letters are checked against the Polybius
+/// alphabet before lookup.
 pub fn bifid_decrypt(ciphertext: &str, period: usize) -> String {
     let clean: Vec<char> = ciphertext
         .chars()
@@ -136,7 +141,9 @@ pub fn bifid_decrypt(ciphertext: &str, period: usize) -> String {
     // single stream of 2*total numbers.
     let mut coords: Vec<u8> = Vec::with_capacity(total * 2);
     for &c in &clean {
-        let pos = POLYBIUS_ALPHABET.iter().position(|&x| x == c).unwrap();
+        let Some(pos) = POLYBIUS_ALPHABET.iter().position(|&x| x == c) else {
+            return String::new();
+        };
         coords.push((pos / 5 + 1) as u8);
         coords.push((pos % 5 + 1) as u8);
     }

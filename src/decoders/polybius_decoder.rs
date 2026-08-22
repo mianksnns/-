@@ -108,11 +108,15 @@ impl Crack for Decoder<PolybiusDecoder> {
 
 /// Decode a Polybius square ciphertext (a stream of digits grouped into
 /// coordinate pairs) into plaintext. Non-digit characters are ignored.
+///
+/// # Panics
+///
+/// This function never panics: it filters the input to ASCII digits before
+/// converting, and returns an empty string for invalid coordinates.
 pub fn polybius_decrypt(ciphertext: &str) -> String {
     let digits: Vec<u8> = ciphertext
         .chars()
-        .filter(|c| c.is_ascii_digit())
-        .map(|c| c.to_digit(10).unwrap() as u8)
+        .filter_map(|c| c.to_digit(10).map(|d| d as u8))
         .collect();
     let mut result = String::with_capacity(digits.len() / 2);
     let mut idx = 0;

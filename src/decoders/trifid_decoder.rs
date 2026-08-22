@@ -122,6 +122,11 @@ impl Crack for Decoder<TrifidDecoder> {
 /// Decrypt a Trifid ciphertext using the standard alphabet cube and the given
 /// period (block length). Returns an empty string when the input cannot be
 /// decrypted.
+///
+/// # Panics
+///
+/// This function never panics: letters are checked against the Trifid
+/// alphabet before lookup.
 pub fn trifid_decrypt(ciphertext: &str, period: usize) -> String {
     let clean: Vec<char> = ciphertext
         .chars()
@@ -139,7 +144,9 @@ pub fn trifid_decrypt(ciphertext: &str, period: usize) -> String {
     // coordinate triple.
     let mut coords: Vec<u8> = Vec::with_capacity(total * 3);
     for &c in &clean {
-        let pos = TRIFID_ALPHABET.iter().position(|&x| x == c).unwrap();
+        let Some(pos) = TRIFID_ALPHABET.iter().position(|&x| x == c) else {
+            return String::new();
+        };
         coords.push((pos / 9 + 1) as u8);
         coords.push(((pos % 9) / 3 + 1) as u8);
         coords.push((pos % 3 + 1) as u8);

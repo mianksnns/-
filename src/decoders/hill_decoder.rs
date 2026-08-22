@@ -127,12 +127,7 @@ impl Crack for Decoder<HillDecoder> {
 /// Compute the modular multiplicative inverse of `a` modulo 26, if it exists.
 fn mod_inverse_26(a: i64) -> Option<i64> {
     let a = a.rem_euclid(26);
-    for x in 1..26 {
-        if (a * x) % 26 == 1 {
-            return Some(x);
-        }
-    }
-    None
+    (1..26).find(|&x| (a * x) % 26 == 1)
 }
 
 /// Decrypt a Hill ciphertext encrypted with a 2x2 key matrix `[a, b, c, d]`.

@@ -152,6 +152,15 @@ pub mod two_square_decoder;
 /// The adfgvx_decoder module decodes ADFGVX ciphers
 pub mod adfgvx_decoder;
 
+/// The chaocipher_decoder module decodes Chaocipher messages
+pub mod chaocipher_decoder;
+
+/// The enigma_decoder module decodes Enigma machine messages
+pub mod enigma_decoder;
+
+/// The straddling_checkerboard_decoder module decodes straddling checkerboard ciphers
+pub mod straddling_checkerboard_decoder;
+
 /// The bacon_decoder module decodes Bacon's ciphers
 pub mod bacon_decoder;
 
@@ -216,6 +225,8 @@ use porta_decoder::PortaDecoder;
 use adfgvx_decoder::AdfgvxDecoder;
 use bacon_decoder::BaconDecoder;
 use bifid_decoder::BifidDecoder;
+use chaocipher_decoder::ChaocipherDecoder;
+use enigma_decoder::EnigmaDecoder;
 use four_square_decoder::FourSquareDecoder;
 use hill_decoder::HillDecoder;
 use leet_decoder::LeetDecoder;
@@ -223,6 +234,7 @@ use nato_decoder::NatoDecoder;
 use pigpen_decoder::PigpenDecoder;
 use playfair_decoder::PlayfairDecoder;
 use polybius_decoder::PolybiusDecoder;
+use straddling_checkerboard_decoder::StraddlingCheckerboardDecoder;
 use tap_code_decoder::TapCodeDecoder;
 use trifid_decoder::TrifidDecoder;
 use two_square_decoder::TwoSquareDecoder;
@@ -333,6 +345,12 @@ pub enum DecoderType {
     TwoSquareDecoder(two_square_decoder::TwoSquareDecoder),
     /// adfgvx decoder
     AdfgvxDecoder(adfgvx_decoder::AdfgvxDecoder),
+    /// chaocipher decoder
+    ChaocipherDecoder(chaocipher_decoder::ChaocipherDecoder),
+    /// enigma decoder
+    EnigmaDecoder(enigma_decoder::EnigmaDecoder),
+    /// straddling checkerboard decoder
+    StraddlingCheckerboardDecoder(straddling_checkerboard_decoder::StraddlingCheckerboardDecoder),
     /// bacon decoder
     BaconDecoder(bacon_decoder::BaconDecoder),
     /// leet decoder
@@ -506,6 +524,15 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             DecoderBox::new(Decoder::<TwoSquareDecoder>::new()),
         ),
         ("ADFGVX", DecoderBox::new(Decoder::<AdfgvxDecoder>::new())),
+        (
+            "Chaocipher",
+            DecoderBox::new(Decoder::<ChaocipherDecoder>::new()),
+        ),
+        ("Enigma", DecoderBox::new(Decoder::<EnigmaDecoder>::new())),
+        (
+            "Straddling checkerboard",
+            DecoderBox::new(Decoder::<StraddlingCheckerboardDecoder>::new()),
+        ),
         (
             "Bacon's cipher",
             DecoderBox::new(Decoder::<BaconDecoder>::new()),
