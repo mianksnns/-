@@ -32,7 +32,7 @@ use log::{debug, info, trace};
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
 ///
-/// let result = decode_base32hex.crack("91JPRV3F41BPYW1CC3", &checker).unencrypted_text;
+/// let result = decode_base32hex.crack("D1IMOR3F41RMUSJCCG", &checker).unencrypted_text;
 /// assert!(result.is_some());
 /// ```
 pub struct Base32HexDecoder;

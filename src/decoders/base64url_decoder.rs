@@ -33,9 +33,9 @@ use log::{debug, info, trace};
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
 ///
-/// let result = decode_base64url.crack("SGVsbG8tV29ybGQ", &checker).unencrypted_text;
+/// let result = decode_base64url.crack("YWE-", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap()[0], "Hello-World");
+/// assert_eq!(result.unwrap()[0], "aa>");
 /// ```
 pub struct Base64UrlDecoder;
 

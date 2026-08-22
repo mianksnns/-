@@ -297,8 +297,6 @@ fn decompress_zstd(bytes: &[u8]) -> Option<Vec<u8>> {
 
 /// Decompress brotli data into its raw bytes.
 fn decompress_brotli(bytes: &[u8]) -> Option<Vec<u8>> {
-    use std::io::Read;
-
     let mut out = Vec::new();
     let mut decoder = brotli::Decompressor::new(bytes, 8192);
     match std::io::copy(&mut decoder, &mut out) {
