@@ -110,6 +110,24 @@ pub mod html_entities_decoder;
 /// The unicode_escape_decoder module decodes unicode escape sequences
 pub mod unicode_escape_decoder;
 
+/// The affine_decoder module decodes affine ciphers
+pub mod affine_decoder;
+
+/// The beaufort_decoder module decodes beaufort ciphers
+pub mod beaufort_decoder;
+
+/// The autokey_decoder module decodes autokey ciphers
+pub mod autokey_decoder;
+
+/// The gronsfeld_decoder module decodes gronsfeld ciphers
+pub mod gronsfeld_decoder;
+
+/// The porta_decoder module decodes porta ciphers
+pub mod porta_decoder;
+
+/// The nihilist_decoder module decodes nihilist ciphers
+pub mod nihilist_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -148,6 +166,13 @@ use substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 use unicode_escape_decoder::UnicodeEscapeDecoder;
 use xor_repeating_decoder::XorRepeatingDecoder;
 use xor_single_byte_decoder::XorSingleByteDecoder;
+
+use affine_decoder::AffineDecoder;
+use autokey_decoder::AutokeyDecoder;
+use beaufort_decoder::BeaufortDecoder;
+use gronsfeld_decoder::GronsfeldDecoder;
+use nihilist_decoder::NihilistDecoder;
+use porta_decoder::PortaDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -227,6 +252,18 @@ pub enum DecoderType {
     HtmlEntitiesDecoder(html_entities_decoder::HtmlEntitiesDecoder),
     /// unicode escape decoder
     UnicodeEscapeDecoder(unicode_escape_decoder::UnicodeEscapeDecoder),
+    /// affine decoder
+    AffineDecoder(affine_decoder::AffineDecoder),
+    /// beaufort decoder
+    BeaufortDecoder(beaufort_decoder::BeaufortDecoder),
+    /// autokey decoder
+    AutokeyDecoder(autokey_decoder::AutokeyDecoder),
+    /// gronsfeld decoder
+    GronsfeldDecoder(gronsfeld_decoder::GronsfeldDecoder),
+    /// porta decoder
+    PortaDecoder(porta_decoder::PortaDecoder),
+    /// nihilist decoder
+    NihilistDecoder(nihilist_decoder::NihilistDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -354,6 +391,21 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "Unicode escape",
             DecoderBox::new(Decoder::<UnicodeEscapeDecoder>::new()),
+        ),
+        ("Affine", DecoderBox::new(Decoder::<AffineDecoder>::new())),
+        (
+            "Beaufort",
+            DecoderBox::new(Decoder::<BeaufortDecoder>::new()),
+        ),
+        ("Autokey", DecoderBox::new(Decoder::<AutokeyDecoder>::new())),
+        (
+            "Gronsfeld",
+            DecoderBox::new(Decoder::<GronsfeldDecoder>::new()),
+        ),
+        ("Porta", DecoderBox::new(Decoder::<PortaDecoder>::new())),
+        (
+            "Nihilist",
+            DecoderBox::new(Decoder::<NihilistDecoder>::new()),
         ),
     ])
 });

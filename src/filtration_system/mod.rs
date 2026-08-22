@@ -47,6 +47,13 @@ use crate::decoders::unicode_escape_decoder::UnicodeEscapeDecoder;
 use crate::decoders::xor_repeating_decoder::XorRepeatingDecoder;
 use crate::decoders::xor_single_byte_decoder::XorSingleByteDecoder;
 
+use crate::decoders::affine_decoder::AffineDecoder;
+use crate::decoders::autokey_decoder::AutokeyDecoder;
+use crate::decoders::beaufort_decoder::BeaufortDecoder;
+use crate::decoders::gronsfeld_decoder::GronsfeldDecoder;
+use crate::decoders::nihilist_decoder::NihilistDecoder;
+use crate::decoders::porta_decoder::PortaDecoder;
+
 use log::trace;
 use rayon::prelude::*;
 
@@ -278,6 +285,13 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let html_entities = Decoder::<HtmlEntitiesDecoder>::new();
     let unicode_escape = Decoder::<UnicodeEscapeDecoder>::new();
 
+    let affine = Decoder::<AffineDecoder>::new();
+    let beaufort = Decoder::<BeaufortDecoder>::new();
+    let autokey = Decoder::<AutokeyDecoder>::new();
+    let gronsfeld = Decoder::<GronsfeldDecoder>::new();
+    let porta = Decoder::<PortaDecoder>::new();
+    let nihilist = Decoder::<NihilistDecoder>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -315,6 +329,12 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(base64url),
             Box::new(html_entities),
             Box::new(unicode_escape),
+            Box::new(affine),
+            Box::new(beaufort),
+            Box::new(autokey),
+            Box::new(gronsfeld),
+            Box::new(porta),
+            Box::new(nihilist),
         ],
     }
 }
