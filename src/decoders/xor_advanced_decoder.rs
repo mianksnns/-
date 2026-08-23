@@ -53,12 +53,17 @@ impl Crack for Decoder<XorAdvancedDecoder> {
         };
 
         // Mode 1: known-plaintext attack
-        if !part2.is_empty() && part2.as_bytes().iter().all(|&b| {
-            b.is_ascii_alphanumeric() || b == b' ' || b == b'.' || b == b',' || b == b'!' || b == b'?'
-        }) {
-            if let Some(result) =
-                known_plaintext_attack(part1, part2, checker, &mut results)
-            {
+        if !part2.is_empty()
+            && part2.as_bytes().iter().all(|&b| {
+                b.is_ascii_alphanumeric()
+                    || b == b' '
+                    || b == b'.'
+                    || b == b','
+                    || b == b'!'
+                    || b == b'?'
+            })
+        {
+            if let Some(result) = known_plaintext_attack(part1, part2, checker, &mut results) {
                 return result;
             }
         }
@@ -227,7 +232,12 @@ fn two_ciphertext_attack(
                 .collect();
 
             if candidate.iter().all(|&b| {
-                b.is_ascii_alphanumeric() || b == b' ' || b == b'.' || b == b',' || b == b'!' || b == b'_'
+                b.is_ascii_alphanumeric()
+                    || b == b' '
+                    || b == b'.'
+                    || b == b','
+                    || b == b'!'
+                    || b == b'_'
             }) {
                 // This might be part of plaintext2; verify by deriving what plaintext1 would be
                 let pt1_fragment: Vec<u8> = xored[pos..pos + crib.len()]

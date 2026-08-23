@@ -81,8 +81,8 @@ static ENHANCED_DETECTOR: Mutex<Option<Box<dyn EnhancedDetector>>> = Mutex::new(
 /// The model is expected at `~/.ciphey/models/` or the path specified in config.
 #[cfg(feature = "enhanced-detection")]
 pub fn init_detector(config: &EnhancedConfig) -> bool {
-    use std::sync::OnceLock;
     use std::cell::RefCell;
+    use std::sync::OnceLock;
 
     thread_local! {
         static LOCAL_DETECTOR: RefCell<Option<Box<dyn EnhancedDetector>>> = const { RefCell::new(None) };

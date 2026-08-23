@@ -220,48 +220,48 @@ impl Crack for Decoder<HashCrackDecoder> {
             return results;
         }
 
-    for algorithm in &algorithms {
-        trace!(
-            "Trying hash algorithm {:?} with {} words",
-            algorithm,
-            wordlist.len()
-        );
+        for algorithm in &algorithms {
+            trace!(
+                "Trying hash algorithm {:?} with {} words",
+                algorithm,
+                wordlist.len()
+            );
 
-        // First try the compact rainbow table (fast path)
-        if let Some(plaintext) = super::hash_rainbow::lookup(text, *algorithm) {
-            if check_string_success(&plaintext, text) {
-                let checker_result = checker.check(&plaintext);
-                results.unencrypted_text = Some(vec![plaintext.clone()]);
-                results.update_checker(&checker_result);
-                results.key = Some(format!("{} (rainbow)", algorithm.name()));
-                info!(
-                    "Cracked hash {} via rainbow table ({}) -> {}",
-                    text,
-                    algorithm.name(),
-                    plaintext
-                );
-                return results;
+            // First try the compact rainbow table (fast path)
+            if let Some(plaintext) = super::hash_rainbow::lookup(text, *algorithm) {
+                if check_string_success(&plaintext, text) {
+                    let checker_result = checker.check(&plaintext);
+                    results.unencrypted_text = Some(vec![plaintext.clone()]);
+                    results.update_checker(&checker_result);
+                    results.key = Some(format!("{} (rainbow)", algorithm.name()));
+                    info!(
+                        "Cracked hash {} via rainbow table ({}) -> {}",
+                        text,
+                        algorithm.name(),
+                        plaintext
+                    );
+                    return results;
+                }
+            }
+
+            // Fall back to wordlist brute-force
+            let cracked = crack_with_algorithm(text, *algorithm, &wordlist);
+            if let Some(plaintext) = cracked {
+                if check_string_success(&plaintext, text) {
+                    let checker_result = checker.check(&plaintext);
+                    results.unencrypted_text = Some(vec![plaintext.clone()]);
+                    results.update_checker(&checker_result);
+                    results.key = Some(algorithm.name().to_string());
+                    info!(
+                        "Cracked hash {} with algorithm {} -> {}",
+                        text,
+                        algorithm.name(),
+                        plaintext
+                    );
+                    return results;
+                }
             }
         }
-
-        // Fall back to wordlist brute-force
-        let cracked = crack_with_algorithm(text, *algorithm, &wordlist);
-        if let Some(plaintext) = cracked {
-            if check_string_success(&plaintext, text) {
-                let checker_result = checker.check(&plaintext);
-                results.unencrypted_text = Some(vec![plaintext.clone()]);
-                results.update_checker(&checker_result);
-                results.key = Some(algorithm.name().to_string());
-                info!(
-                    "Cracked hash {} with algorithm {} -> {}",
-                    text,
-                    algorithm.name(),
-                    plaintext
-                );
-                return results;
-            }
-        }
-    }
 
         // If all methods fail, return the empty result.
         results

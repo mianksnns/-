@@ -200,11 +200,7 @@ fn read_varint(bytes: &[u8], mut pos: usize) -> Option<(u64, usize)> {
 }
 
 /// Read a field value based on wire type.
-fn read_field_value(
-    bytes: &[u8],
-    pos: usize,
-    wire_type: &WireType,
-) -> Option<(FieldValue, usize)> {
+fn read_field_value(bytes: &[u8], pos: usize, wire_type: &WireType) -> Option<(FieldValue, usize)> {
     match wire_type {
         WireType::Varint => {
             let (value, new_pos) = read_varint(bytes, pos)?;
@@ -280,7 +276,9 @@ fn render_protobuf(fields: &[ProtobufField]) -> String {
             FieldValue::LengthDelimited(data) => {
                 // Try UTF-8 string
                 if let Ok(s) = String::from_utf8(data.clone()) {
-                    if s.chars().all(|c| c.is_ascii_graphic() || c.is_ascii_whitespace()) {
+                    if s.chars()
+                        .all(|c| c.is_ascii_graphic() || c.is_ascii_whitespace())
+                    {
                         output.push_str(&format!("\"{}\"", s));
                     } else {
                         output.push_str(&format!("({} bytes): {}", data.len(), s));

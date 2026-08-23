@@ -64,6 +64,7 @@ use crate::decoders::porta_decoder::PortaDecoder;
 
 use crate::decoders::adfgvx_decoder::AdfgvxDecoder;
 use crate::decoders::bacon_decoder::BaconDecoder;
+use crate::decoders::base122_decoder::Base122Decoder;
 use crate::decoders::bifid_decoder::BifidDecoder;
 use crate::decoders::chaocipher_decoder::ChaocipherDecoder;
 use crate::decoders::enigma_decoder::EnigmaDecoder;
@@ -74,14 +75,13 @@ use crate::decoders::nato_decoder::NatoDecoder;
 use crate::decoders::pigpen_decoder::PigpenDecoder;
 use crate::decoders::playfair_decoder::PlayfairDecoder;
 use crate::decoders::polybius_decoder::PolybiusDecoder;
+use crate::decoders::protobuf_deep_decoder::ProtobufDeepDecoder;
 use crate::decoders::straddling_checkerboard_decoder::StraddlingCheckerboardDecoder;
 use crate::decoders::tap_code_decoder::TapCodeDecoder;
 use crate::decoders::trifid_decoder::TrifidDecoder;
 use crate::decoders::two_square_decoder::TwoSquareDecoder;
-use crate::decoders::base122_decoder::Base122Decoder;
-use crate::decoders::xor_advanced_decoder::XorAdvancedDecoder;
-use crate::decoders::protobuf_deep_decoder::ProtobufDeepDecoder;
 use crate::decoders::weak_crypto_practical_decoder::WeakCryptoPracticalDecoder;
+use crate::decoders::xor_advanced_decoder::XorAdvancedDecoder;
 
 use log::trace;
 use rayon::prelude::*;

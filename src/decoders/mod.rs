@@ -293,9 +293,9 @@ use trifid_decoder::TrifidDecoder;
 use two_square_decoder::TwoSquareDecoder;
 
 use base122_decoder::Base122Decoder;
-use xor_advanced_decoder::XorAdvancedDecoder;
 use protobuf_deep_decoder::ProtobufDeepDecoder;
 use weak_crypto_practical_decoder::WeakCryptoPracticalDecoder;
+use xor_advanced_decoder::XorAdvancedDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -658,10 +658,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             "Tap code",
             DecoderBox::new(Decoder::<TapCodeDecoder>::new()),
         ),
-        (
-            "Base122",
-            DecoderBox::new(Decoder::<Base122Decoder>::new()),
-        ),
+        ("Base122", DecoderBox::new(Decoder::<Base122Decoder>::new())),
         (
             "XOR Advanced",
             DecoderBox::new(Decoder::<XorAdvancedDecoder>::new()),
