@@ -1,0 +1,86 @@
+{
+  "name": "ciphey-decode",
+  "displayName": "Ciphey Decode",
+  "description": "Decode selected ciphertext using Ciphey's automatic decoding engine",
+  "version": "0.1.0",
+  "publisher": "ciphey",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Cryptography"
+  ],
+  "keywords": [
+    "decode",
+    "cipher",
+    "base64",
+    "cryptography",
+    "ctf"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "ciphey.decode",
+        "title": "Decode Selection",
+        "category": "Ciphey"
+      },
+      {
+        "command": "ciphey.decodeReplace",
+        "title": "Decode and Replace",
+        "category": "Ciphey"
+      },
+      {
+        "command": "ciphey.showPath",
+        "title": "Show Decode Path",
+        "category": "Ciphey"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "ciphey.decode",
+          "when": "editorHasSelection",
+          "group": "ciphey@1"
+        },
+        {
+          "command": "ciphey.decodeReplace",
+          "when": "editorHasSelection",
+          "group": "ciphey@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Ciphey Decode",
+      "properties": {
+        "ciphey.timeout": {
+          "type": "number",
+          "default": 10,
+          "description": "Timeout in seconds for decode operations"
+        },
+        "ciphey.showPath": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the decoder path in results"
+        },
+        "ciphey.regex": {
+          "type": "string",
+          "default": "",
+          "description": "Optional regex pattern to match against decoded text"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -10,6 +10,8 @@
 /// The main crate for the ciphey project.
 /// This provides the library API interface for ciphey.
 mod api_library_input_struct;
+/// Bot integration for Discord and Telegram
+pub mod bot;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
 /// CLI Arg Parsing library
@@ -52,6 +54,8 @@ pub mod storage;
 mod timer;
 /// Terminal UI module for interactive decoding
 pub mod tui;
+/// WASM compatibility module for browser-based decoding
+pub mod wasm;
 
 /// Python bindings, built with `--features python`.
 #[cfg(feature = "python")]
