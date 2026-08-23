@@ -73,6 +73,9 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
                     trace!("Found potential decoded string: {}", text);
                     decoded_strings.insert(text);
                 }
+            } else if target_type == "binary" && is_binary_like(&substituted) {
+                trace!("Found potential binary substitution candidate: {}", substituted);
+                decoded_strings.insert(substituted);
             }
         }
 
@@ -130,6 +133,10 @@ fn permute(
         permute(indexes, start + 1, symbols, permutations);
         indexes.swap(start, i);
     }
+}
+
+fn is_binary_like(text: &str) -> bool {
+    !text.is_empty() && text.chars().all(|c| matches!(c, '0' | '1'))
 }
 
 #[cfg(test)]

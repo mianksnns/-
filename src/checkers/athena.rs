@@ -8,11 +8,14 @@ use log::trace;
 use once_cell::sync::Lazy;
 
 use super::{
+    binary_file_header_checker::BinaryFileHeaderChecker,
     checker_type::{Check, Checker},
     english::EnglishChecker,
     human_checker,
     lemmeknow_checker::LemmeKnow,
+    multilingual_checker::MultilingualChecker,
     password::PasswordChecker,
+    programming_language_checker::ProgrammingLanguageChecker,
     regex_checker::RegexChecker,
     structured_data::StructuredDataChecker,
     wordlist::WordlistChecker,
@@ -34,6 +37,12 @@ static WORDLIST_CHECKER: Lazy<Checker<WordlistChecker>> =
 /// Cached checker for JSON, XML, TOML, CSV, and YAML results.
 static STRUCTURED_DATA_CHECKER: Lazy<Checker<StructuredDataChecker>> =
     Lazy::new(Checker::<StructuredDataChecker>::new);
+static PROGRAMMING_LANGUAGE_CHECKER: Lazy<Checker<ProgrammingLanguageChecker>> =
+    Lazy::new(Checker::<ProgrammingLanguageChecker>::new);
+static MULTILINGUAL_CHECKER: Lazy<Checker<MultilingualChecker>> =
+    Lazy::new(Checker::<MultilingualChecker>::new);
+static BINARY_FILE_HEADER_CHECKER: Lazy<Checker<BinaryFileHeaderChecker>> =
+    Lazy::new(Checker::<BinaryFileHeaderChecker>::new);
 
 impl Check for Checker<Athena> {
     fn new() -> Self {
@@ -130,6 +139,42 @@ impl Check for Checker<Athena> {
                 check_res.text = password_result.text;
                 check_res.description = password_result.description;
                 cli_pretty_printing::success(&format!("DEBUG: Athena password checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
+                return check_res;
+            }
+
+            let programming = PROGRAMMING_LANGUAGE_CHECKER
+                .clone()
+                .with_sensitivity(self.sensitivity);
+            let programming_result = programming.check(text);
+            if programming_result.is_identified {
+                let mut check_res = CheckResult::new(&programming);
+                check_res.is_identified = true;
+                check_res.text = programming_result.text;
+                check_res.description = programming_result.description;
+                return check_res;
+            }
+
+            let binary_file_header = BINARY_FILE_HEADER_CHECKER
+                .clone()
+                .with_sensitivity(self.sensitivity);
+            let binary_file_header_result = binary_file_header.check(text);
+            if binary_file_header_result.is_identified {
+                let mut check_res = CheckResult::new(&binary_file_header);
+                check_res.is_identified = true;
+                check_res.text = binary_file_header_result.text;
+                check_res.description = binary_file_header_result.description;
+                return check_res;
+            }
+
+            let multilingual = MULTILINGUAL_CHECKER
+                .clone()
+                .with_sensitivity(self.sensitivity);
+            let multilingual_result = multilingual.check(text);
+            if multilingual_result.is_identified {
+                let mut check_res = CheckResult::new(&multilingual);
+                check_res.is_identified = true;
+                check_res.text = multilingual_result.text;
+                check_res.description = multilingual_result.description;
                 return check_res;
             }
 

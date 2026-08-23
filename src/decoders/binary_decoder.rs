@@ -28,30 +28,29 @@ impl Crack for Decoder<BinaryDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying binary with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
-        let mut decoded_strings = Vec::new();
 
         for shift in 1..25 {
             let decoded_text = binary_to_string(text, shift);
 
-            decoded_strings.push(decoded_text);
-            let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
-            if !check_string_success(borrowed_decoded_text, text) {
+            if !check_string_success(&decoded_text, text) {
                 debug!(
                     "Failed to decode binary because binary returned false on string {}. This means the string is 'funny' as it wasn't modified.",
-                    borrowed_decoded_text
+                    decoded_text
                 );
-                return results;
+                continue;
             }
-            let checker_result = checker.check(borrowed_decoded_text);
+            if !is_mostly_printable(&decoded_text) {
+                continue;
+            }
+            let checker_result = checker.check(&decoded_text);
             // If checkers return true, exit early with the correct result
             if checker_result.is_identified {
                 info!("Found a match with binary bit {}", shift);
-                results.unencrypted_text = Some(vec![borrowed_decoded_text.to_string()]);
+                results.unencrypted_text = Some(vec![decoded_text]);
                 results.update_checker(&checker_result);
                 return results;
             }
         }
-        results.unencrypted_text = Some(decoded_strings);
         results
     }
     /// Gets all tags for this decoder
@@ -96,6 +95,14 @@ fn binary_to_string(binary: &str, bit: u8) -> String {
         }
     }
     out
+}
+
+fn is_mostly_printable(text: &str) -> bool {
+    let printable = text
+        .chars()
+        .filter(|c| c.is_ascii_graphic() || c.is_ascii_whitespace())
+        .count();
+    printable * 2 >= text.chars().count()
 }
 
 #[cfg(test)]

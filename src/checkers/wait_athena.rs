@@ -10,10 +10,13 @@ use log::trace;
 use crate::storage::wait_athena_storage;
 
 use super::{
+    binary_file_header_checker::BinaryFileHeaderChecker,
     checker_type::{Check, Checker},
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
+    multilingual_checker::MultilingualChecker,
     password::PasswordChecker,
+    programming_language_checker::ProgrammingLanguageChecker,
     regex_checker::RegexChecker,
     wordlist::WordlistChecker,
 };
@@ -133,6 +136,63 @@ impl Check for Checker<WaitAthena> {
                 return check_res;
             }
 
+            let programming =
+                Checker::<ProgrammingLanguageChecker>::new().with_sensitivity(self.sensitivity);
+            let programming_result = programming.check(text);
+            if programming_result.is_identified {
+                let mut check_res = CheckResult::new(&programming);
+                check_res.is_identified = true;
+                check_res.text = programming_result.text;
+                check_res.description = programming_result.description;
+
+                wait_athena_storage::add_plaintext_result(
+                    check_res.text.clone(),
+                    check_res.description.clone(),
+                    programming.name.to_string(),
+                    "ProgrammingLanguageChecker".to_string(),
+                );
+
+                return check_res;
+            }
+
+            let binary_file_header =
+                Checker::<BinaryFileHeaderChecker>::new().with_sensitivity(self.sensitivity);
+            let binary_file_header_result = binary_file_header.check(text);
+            if binary_file_header_result.is_identified {
+                let mut check_res = CheckResult::new(&binary_file_header);
+                check_res.is_identified = true;
+                check_res.text = binary_file_header_result.text;
+                check_res.description = binary_file_header_result.description;
+
+                wait_athena_storage::add_plaintext_result(
+                    check_res.text.clone(),
+                    check_res.description.clone(),
+                    binary_file_header.name.to_string(),
+                    "BinaryFileHeaderChecker".to_string(),
+                );
+
+                return check_res;
+            }
+
+            let multilingual =
+                Checker::<MultilingualChecker>::new().with_sensitivity(self.sensitivity);
+            let multilingual_result = multilingual.check(text);
+            if multilingual_result.is_identified {
+                let mut check_res = CheckResult::new(&multilingual);
+                check_res.is_identified = true;
+                check_res.text = multilingual_result.text;
+                check_res.description = multilingual_result.description;
+
+                wait_athena_storage::add_plaintext_result(
+                    check_res.text.clone(),
+                    check_res.description.clone(),
+                    multilingual.name.to_string(),
+                    "MultilingualChecker".to_string(),
+                );
+
+                return check_res;
+            }
+
             let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
             let english_result = english.check(text);
             if english_result.is_identified {
@@ -150,6 +210,26 @@ impl Check for Checker<WaitAthena> {
                 );
 
                 // Continue checking by returning the result
+                return check_res;
+            }
+
+            let structured_data =
+                Checker::<crate::checkers::structured_data::StructuredDataChecker>::new()
+                    .with_sensitivity(self.sensitivity);
+            let structured_result = structured_data.check(text);
+            if structured_result.is_identified {
+                let mut check_res = CheckResult::new(&structured_data);
+                check_res.is_identified = true;
+                check_res.text = structured_result.text;
+                check_res.description = structured_result.description;
+
+                wait_athena_storage::add_plaintext_result(
+                    check_res.text.clone(),
+                    check_res.description.clone(),
+                    structured_data.name.to_string(),
+                    "StructuredDataChecker".to_string(),
+                );
+
                 return check_res;
             }
         }

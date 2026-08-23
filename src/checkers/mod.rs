@@ -1,10 +1,13 @@
 use self::{
     athena::Athena,
+    binary_file_header_checker::BinaryFileHeaderChecker,
     checker_result::CheckResult,
     checker_type::{Check, CheckInfo, Checker},
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
+    multilingual_checker::MultilingualChecker,
     password::PasswordChecker,
+    programming_language_checker::ProgrammingLanguageChecker,
     regex_checker::RegexChecker,
     structured_data::StructuredDataChecker,
     wait_athena::WaitAthena,
@@ -17,6 +20,8 @@ use std::collections::HashMap;
 
 /// The default checker we use which simply calls all other checkers in order.
 pub mod athena;
+/// The Binary File Header checker recognizes common file signatures.
+pub mod binary_file_header_checker;
 /// The checkerResult struct is used to store the results of a checker.
 pub mod checker_result;
 /// This is the base checker that all other checkers inherit from.
@@ -29,8 +34,12 @@ pub mod english;
 pub mod human_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
+/// The Multilingual checker recognizes non-English plaintext.
+pub mod multilingual_checker;
 /// The Password checker checks if the text matches a known common password
 pub mod password;
+/// The Programming Language checker recognizes code snippets.
+pub mod programming_language_checker;
 /// The Regex checker checks to see if the intended text matches the plaintext
 pub mod regex_checker;
 /// The Structured Data checker recognizes common serialization formats.
@@ -56,6 +65,12 @@ pub enum CheckerTypes {
     CheckPassword(Checker<PasswordChecker>),
     /// Wrapper for Wordlist Checker
     CheckWordlist(Checker<WordlistChecker>),
+    /// Wrapper for Binary File Header Checker
+    CheckBinaryFileHeader(Checker<BinaryFileHeaderChecker>),
+    /// Wrapper for Multilingual Checker
+    CheckMultilingual(Checker<MultilingualChecker>),
+    /// Wrapper for Programming Language Checker
+    CheckProgrammingLanguage(Checker<ProgrammingLanguageChecker>),
     /// Wrapper for Structured Data Checker
     CheckStructuredData(Checker<StructuredDataChecker>),
 }
@@ -102,6 +117,15 @@ impl CheckerTypes {
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
             CheckerTypes::CheckPassword(password_checker) => password_checker.check(text),
             CheckerTypes::CheckWordlist(wordlist_checker) => wordlist_checker.check(text),
+            CheckerTypes::CheckBinaryFileHeader(binary_file_header_checker) => {
+                binary_file_header_checker.check(text)
+            }
+            CheckerTypes::CheckMultilingual(multilingual_checker) => {
+                multilingual_checker.check(text)
+            }
+            CheckerTypes::CheckProgrammingLanguage(programming_language_checker) => {
+                programming_language_checker.check(text)
+            }
             CheckerTypes::CheckStructuredData(structured_data_checker) => {
                 structured_data_checker.check(text)
             }
@@ -116,6 +140,9 @@ impl CheckerTypes {
         CheckRegex,
         CheckPassword,
         CheckWordlist,
+        CheckBinaryFileHeader,
+        CheckMultilingual,
+        CheckProgrammingLanguage,
         CheckStructuredData,
     );
 }
@@ -164,6 +191,18 @@ pub static CHECKER_MAP: Lazy<HashMap<&str, CheckerBox>> = Lazy::new(|| {
         (
             "Regex Checker",
             CheckerBox::new(Checker::<RegexChecker>::new()),
+        ),
+        (
+            "Binary File Header Checker",
+            CheckerBox::new(Checker::<BinaryFileHeaderChecker>::new()),
+        ),
+        (
+            "Multilingual Checker",
+            CheckerBox::new(Checker::<MultilingualChecker>::new()),
+        ),
+        (
+            "Programming Language Checker",
+            CheckerBox::new(Checker::<ProgrammingLanguageChecker>::new()),
         ),
         (
             "WaitAthena Checker",

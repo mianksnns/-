@@ -111,6 +111,8 @@ pub mod base32hex_decoder;
 pub mod bencode_decoder;
 /// The binary_serialization_decoder module detects compact binary serialization formats
 pub mod binary_serialization_decoder;
+/// The ctf_weak_crypto_decoder module detects weak crypto patterns
+pub mod ctf_weak_crypto_decoder;
 
 /// The bech32_decoder module decodes Bech32 strings
 pub mod bech32_decoder;
@@ -239,6 +241,7 @@ use bencode_decoder::BencodeDecoder;
 use binary_serialization_decoder::BinarySerializationDecoder;
 use brainfuck_interpreter::BrainfuckInterpreter;
 use compression_decoder::CompressionDecoder;
+use ctf_weak_crypto_decoder::CtfWeakCryptoDecoder;
 use hash_crack_decoder::HashCrackDecoder;
 use html_entities_decoder::HtmlEntitiesDecoder;
 use jwt_decoder::JwtDecoder;
@@ -352,6 +355,8 @@ pub enum DecoderType {
     Base32HexDecoder(base32hex_decoder::Base32HexDecoder),
     /// bencode decoder
     BencodeDecoder(bencode_decoder::BencodeDecoder),
+    /// ctf weak crypto decoder
+    CtfWeakCryptoDecoder(ctf_weak_crypto_decoder::CtfWeakCryptoDecoder),
     /// binary serialization decoder
     BinarySerializationDecoder(binary_serialization_decoder::BinarySerializationDecoder),
     /// bech32 decoder
@@ -533,6 +538,10 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             DecoderBox::new(Decoder::<Base32HexDecoder>::new()),
         ),
         ("Bencode", DecoderBox::new(Decoder::<BencodeDecoder>::new())),
+        (
+            "CTF Weak Crypto Hints",
+            DecoderBox::new(Decoder::<CtfWeakCryptoDecoder>::new()),
+        ),
         (
             "Binary Serialization",
             DecoderBox::new(Decoder::<BinarySerializationDecoder>::new()),

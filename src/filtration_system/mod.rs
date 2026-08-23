@@ -43,6 +43,7 @@ use crate::decoders::bencode_decoder::BencodeDecoder;
 use crate::decoders::binary_serialization_decoder::BinarySerializationDecoder;
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 use crate::decoders::compression_decoder::CompressionDecoder;
+use crate::decoders::ctf_weak_crypto_decoder::CtfWeakCryptoDecoder;
 use crate::decoders::hash_crack_decoder::HashCrackDecoder;
 use crate::decoders::html_entities_decoder::HtmlEntitiesDecoder;
 use crate::decoders::jwt_decoder::JwtDecoder;
@@ -304,6 +305,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let base85 = Decoder::<Base85Decoder>::new();
     let base32hex = Decoder::<Base32HexDecoder>::new();
     let bencode = Decoder::<BencodeDecoder>::new();
+    let ctf_weak_crypto = Decoder::<CtfWeakCryptoDecoder>::new();
     let binary_serialization = Decoder::<BinarySerializationDecoder>::new();
     let bech32 = Decoder::<Bech32Decoder>::new();
     let base64url = Decoder::<Base64UrlDecoder>::new();
@@ -377,6 +379,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(base85),
             Box::new(base32hex),
             Box::new(bencode),
+            Box::new(ctf_weak_crypto),
             Box::new(binary_serialization),
             Box::new(bech32),
             Box::new(base64url),
