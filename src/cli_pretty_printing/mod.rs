@@ -281,7 +281,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         return;
     }
     let plaintext = result.text;
-    // calculate path
+    // Calculate path for simple display
     let decoded_path = result
         .path
         .iter()
@@ -296,6 +296,9 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     } else {
         format!("the decoders used are {decoded_path_coloured}")
     };
+
+    // Display ASCII tree visualization
+    display_decode_path_tree(&result.path);
     /// If 30% of the characters are invisible characters, then prompt the
     /// user to save the resulting plaintext into a file
     const INVIS_CHARS_DETECTION_PERCENTAGE: f64 = 0.3;
@@ -722,6 +725,101 @@ pub fn display_top_results(results: &[PlaintextResult]) {
     }
 
     println!("{}", success("=== End of Top Results ===\n"));
+}
+
+/// Display decode path as an ASCII tree visualization
+///
+/// Renders the decoding path as a tree structure showing each decoder applied.
+/// Each level of the tree represents a decoding step.
+///
+/// # Arguments
+/// * `path` - The decode path as a vector of CrackResult objects
+///
+/// # Example Output
+/// ```text
+/// Decode Path:
+/// └─ Base64
+///    └─ Caesar Cipher (shift: 3)
+///       └─ Reverse
+/// ```
+pub fn display_decode_path_tree(path: &[crate::decoders::crack_results::CrackResult]) {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+
+    if path.is_empty() {
+        return;
+    }
+
+    println!("{}", statement("Decode Path:", Some("informational")));
+
+    for (i, crack_result) in path.iter().enumerate() {
+        let is_last = i == path.len() - 1;
+        let connector = if is_last { "└─ " } else { "├─ " };
+        let status_icon = if crack_result.success { " ✓" } else { "" };
+
+        let key_info = match &crack_result.key {
+            Some(k) => format!(" (key: {})", k),
+            None => String::new(),
+        };
+
+        println!(
+            "{}",
+            statement(
+                &format!("{}{}{}{}", connector, crack_result.decoder, key_info, status_icon),
+                Some("informational"),
+            )
+        );
+
+        // Show indentation for tree structure
+        if !is_last {
+            println!("{}", statement("│", Some("informational")));
+        }
+    }
+    println!();
+}
+
+/// Display detailed decode path with intermediate results
+///
+/// Shows each decoding step with its input and output, making it easier
+/// to understand how the plaintext was derived.
+///
+/// # Arguments
+/// * `path` - The decode path as a vector of CrackResult objects
+pub fn display_decode_path_detailed(path: &[crate::decoders::crack_results::CrackResult]) {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+
+    if path.is_empty() {
+        return;
+    }
+
+    println!("{}", statement("\nDetailed Decode Path:", Some("informational")));
+
+    for (i, crack_result) in path.iter().enumerate() {
+        let step_num = i + 1;
+        let status_icon = if crack_result.success { "✓" } else { "○" };
+
+        println!(
+            "{}",
+            statement(
+                &format!("  Step {} [{}] {}", step_num, status_icon, crack_result.decoder),
+                Some("informational"),
+            )
+        );
+
+        // Show the transformation if available
+        if !crack_result.success && i == path.len() - 1 {
+            println!(
+                "{}",
+                statement("    (final step)", Some("informational")),
+            );
+        }
+    }
+    println!();
 }
 
 #[test]

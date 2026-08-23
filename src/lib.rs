@@ -46,6 +46,8 @@ mod searchers;
 pub mod storage;
 /// Timer for internal use
 mod timer;
+/// Terminal UI module for interactive decoding
+pub mod tui;
 
 /// Python bindings, built with `--features python`.
 #[cfg(feature = "python")]

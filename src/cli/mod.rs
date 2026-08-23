@@ -2,6 +2,7 @@
 mod first_run;
 pub use first_run::run_first_time_setup;
 
+use std::io::{self, BufRead};
 use std::{fs::File, io::Read};
 
 use crate::cli_pretty_printing;
@@ -78,6 +79,48 @@ pub struct Opts {
     /// Enable streaming processing with specified chunk size (in characters).
     #[arg(long)]
     stream_chunk_size: Option<usize>,
+    /// Read input from standard input (pipe or interactive).
+    /// Useful for piping output from other commands.
+    #[arg(long)]
+    stdin: bool,
+    /// Batch mode: process multiple ciphertexts (one per line).
+    /// With --file, reads each line of the file as a separate ciphertext.
+    /// With --stdin, reads each line from stdin as a separate ciphertext.
+    #[arg(long)]
+    batch: bool,
+    /// Path to write batch output results.
+    /// If not specified, results are printed to stdout.
+    #[arg(long)]
+    output: Option<String>,
+    /// Cache management operations: clear, stats, list
+    /// Use --cache clear to clear all cache entries
+    /// Use --cache stats to show cache statistics
+    /// Use --cache list [N] to list recent N entries (default: 10)
+    #[arg(long, value_name = "OP")]
+    cache: Option<String>,
+    /// Number of entries to show with --cache list
+    #[arg(long, default_value = "10")]
+    cache_limit: i64,
+    /// Generate shell completion script for the specified shell
+    /// Supported shells: bash, zsh, fish, powershell, elvish
+    #[arg(long, value_name = "SHELL")]
+    generate_completion: Option<String>,
+    /// Enable interactive TUI mode for real-time decoding progress
+    #[arg(long)]
+    tui: bool,
+}
+
+/// Input source enumeration for CLI
+#[derive(Debug, Clone)]
+pub enum InputSource {
+    /// Single text input
+    Text(String),
+    /// File path input
+    File(String),
+    /// Read from stdin
+    Stdin,
+    /// Batch mode (multiple ciphertexts)
+    Batch(Vec<String>),
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -85,7 +128,7 @@ pub struct Opts {
 /// The library struct can be found in the [config](../config) folder.
 /// # Panics
 /// This function can panic when it gets both a file and text input at the same time.
-pub fn parse_cli_args() -> (String, Config) {
+pub fn parse_cli_args() -> (InputSource, Config) {
     let mut opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
         0 => "Warn",
@@ -97,23 +140,214 @@ pub fn parse_cli_args() -> (String, Config) {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
 
-    let input_text: String = match (opts.file.take(), opts.text.take()) {
-        (Some(_), Some(_)) => {
-            panic_failure_both_input_and_fail_provided();
-            unreachable!("panic helper should terminate the process");
-        }
-        (Some(file), None) => read_and_parse_file(file),
-        (None, Some(text)) => text,
-        (None, None) => {
-            panic!("Error. No input was provided. Please use ciphey --help")
-        }
-    };
+    let input_source = parse_input_source(&mut opts);
 
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
-    trace!("The inputted text is {}", &input_text);
 
-    cli_args_into_config_struct(opts, input_text)
+    let config = cli_args_into_config_struct(opts, input_source.clone());
+    (input_source, config)
+}
+
+/// Parse input source from CLI options
+fn parse_input_source(opts: &mut Opts) -> InputSource {
+    if opts.stdin && opts.batch {
+        // Batch mode from stdin
+        let lines = read_stdin_lines();
+        InputSource::Batch(lines)
+    } else if opts.stdin {
+        // Single stdin input
+        InputSource::Stdin
+    } else if opts.file.is_some() && opts.batch {
+        // Batch mode from file
+        let file_path = opts.file.take().unwrap();
+        let lines = read_file_lines(&file_path);
+        InputSource::Batch(lines)
+    } else {
+        match (opts.file.take(), opts.text.take()) {
+            (Some(_), Some(_)) => {
+                panic_failure_both_input_and_fail_provided();
+                unreachable!("panic helper should terminate the process");
+            }
+            (Some(file), None) => InputSource::File(file),
+            (None, Some(text)) => InputSource::Text(text),
+            (None, None) => {
+                // Default to stdin if no input provided
+                InputSource::Stdin
+            }
+        }
+    }
+}
+
+/// Read all lines from stdin
+fn read_stdin_lines() -> Vec<String> {
+    let stdin = io::stdin();
+    stdin
+        .lock()
+        .lines()
+        .filter_map(|line| line.ok())
+        .filter(|line| !line.trim().is_empty())
+        .collect()
+}
+
+/// Read all lines from a file (for batch mode)
+fn read_file_lines(file_path: &str) -> Vec<String> {
+    let mut file = File::open(file_path).unwrap_or_else(|err| {
+        eprintln!("Error: Cannot open file '{}': {}", file_path, err);
+        std::process::exit(1);
+    });
+
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap_or_else(|err| {
+        eprintln!("Error: Cannot read file '{}': {}", file_path, err);
+        std::process::exit(1);
+    });
+
+    contents
+        .lines()
+        .map(|line| line.trim().to_string())
+        .filter(|line| !line.is_empty())
+        .collect()
+}
+
+/// Read stdin content as a single string
+pub fn read_stdin() -> String {
+    let mut contents = String::new();
+    io::stdin()
+        .read_to_string(&mut contents)
+        .unwrap_or_else(|err| {
+            eprintln!("Error reading from stdin: {}", err);
+            std::process::exit(1);
+        });
+    contents.trim_end_matches(['\n', '\r']).to_owned()
+}
+
+/// Handle cache management commands
+///
+/// Returns true if a cache command was handled (and the program should exit),
+/// false if no cache command was specified.
+pub fn handle_cache_command(cache_op: &str, cache_limit: i64) -> bool {
+    use crate::storage::database;
+
+    match cache_op {
+        "clear" => {
+            match database::clear_cache() {
+                Ok(count) => println!("Cleared {} cache entries.", count),
+                Err(e) => eprintln!("Error clearing cache: {}", e),
+            }
+            // Also clear human rejections
+            match database::clear_human_rejections() {
+                Ok(count) => println!("Cleared {} human rejection entries.", count),
+                Err(e) => eprintln!("Error clearing human rejections: {}", e),
+            }
+        }
+        "stats" => {
+            match database::get_cache_stats() {
+                Ok(stats) => {
+                    println!("=== Cache Statistics ===");
+                    println!("Total entries: {}", stats.total_entries);
+                    println!("Successful: {}", stats.successful_entries);
+                    println!("Failed: {}", stats.failed_entries);
+                    println!("Avg execution time: {:.2} ms", stats.avg_execution_time_ms);
+                    if let Some(oldest) = &stats.oldest_entry {
+                        println!("Oldest entry: {}", oldest);
+                    }
+                    if let Some(newest) = &stats.newest_entry {
+                        println!("Newest entry: {}", newest);
+                    }
+                }
+                Err(e) => eprintln!("Error getting cache stats: {}", e),
+            }
+        }
+        "list" => {
+            let limit = if cache_limit > 0 { cache_limit as usize } else { 10 };
+            match database::list_cache_entries(limit) {
+                Ok(entries) => {
+                    if entries.is_empty() {
+                        println!("No cache entries found.");
+                    } else {
+                        println!("=== Recent {} Cache Entries ===", entries.len());
+                        for (i, entry) in entries.iter().enumerate() {
+                            println!(
+                                "\n[{}] Encoded: {}...",
+                                i + 1,
+                                if entry.encoded_text.len() > 40 {
+                                    &entry.encoded_text[..40]
+                                } else {
+                                    &entry.encoded_text
+                                }
+                            );
+                            println!("    Decoded: {}", entry.decoded_text);
+                            println!("    Path: {}", entry.path.join(" → "));
+                            println!(
+                                "    Status: {}",
+                                if entry.successful {
+                                    "Success"
+                                } else {
+                                    "Failed"
+                                }
+                            );
+                            println!("    Time: {} ms", entry.execution_time_ms);
+                            println!("    Date: {}", entry.timestamp);
+                        }
+                    }
+                }
+                Err(e) => eprintln!("Error listing cache entries: {}", e),
+            }
+        }
+        _ => {
+            eprintln!("Unknown cache operation: '{}'. Use 'clear', 'stats', or 'list'.", cache_op);
+        }
+    }
+    true
+}
+
+/// Handle shell completion generation
+///
+/// Generates a shell completion script for the specified shell and prints it to stdout.
+/// Supported shells: bash, zsh, fish, powershell, elvish
+pub fn handle_generate_completion(shell: &str) {
+    use clap::CommandFactory;
+
+    let shell = shell.to_lowercase();
+    let mut cmd = Opts::command();
+
+    match shell.as_str() {
+        "bash" => {
+            let mut buf = Vec::new();
+            clap_complete::generate(clap_complete::Shell::Bash, &mut cmd, "ciphey", &mut buf);
+            println!("{}", String::from_utf8_lossy(&buf));
+        }
+        "zsh" => {
+            let mut buf = Vec::new();
+            clap_complete::generate(clap_complete::Shell::Zsh, &mut cmd, "ciphey", &mut buf);
+            println!("{}", String::from_utf8_lossy(&buf));
+        }
+        "fish" => {
+            let mut buf = Vec::new();
+            clap_complete::generate(clap_complete::Shell::Fish, &mut cmd, "ciphey", &mut buf);
+            println!("{}", String::from_utf8_lossy(&buf));
+        }
+        "powershell" => {
+            let mut buf = Vec::new();
+            clap_complete::generate(
+                clap_complete::Shell::PowerShell,
+                &mut cmd,
+                "ciphey",
+                &mut buf,
+            );
+            println!("{}", String::from_utf8_lossy(&buf));
+        }
+        "elvish" => {
+            let mut buf = Vec::new();
+            clap_complete::generate(clap_complete::Shell::Elvish, &mut cmd, "ciphey", &mut buf);
+            println!("{}", String::from_utf8_lossy(&buf));
+        }
+        _ => {
+            eprintln!("Unsupported shell: '{}'. Supported shells: bash, zsh, fish, powershell, elvish", shell);
+            std::process::exit(1);
+        }
+    }
 }
 
 /// When the CLI is called with `-f` to open a file
@@ -138,7 +372,7 @@ pub fn read_and_parse_file(file_path: String) -> String {
 }
 
 /// Turns our CLI arguments into a config stuct
-fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
+fn cli_args_into_config_struct(opts: Opts, _input: InputSource) -> Config {
     // Get configuration from file first
     let mut config = get_config_file_into_struct();
 
@@ -226,5 +460,23 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
         config.stream_chunk_size = Some(chunk_size);
     }
 
-    (text, config)
+    // Handle batch mode
+    if opts.batch {
+        config.batch_mode = true;
+        config.human_checker_on = false;
+    }
+
+    // Handle cache commands
+    if let Some(cache_op) = opts.cache {
+        config.cache_op = Some(cache_op);
+    }
+    config.cache_limit = opts.cache_limit;
+
+    // Handle shell completion generation
+    config.generate_completion = opts.generate_completion;
+
+    // Handle TUI mode
+    config.tui_mode = opts.tui;
+
+    config
 }

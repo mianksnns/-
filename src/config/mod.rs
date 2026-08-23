@@ -83,6 +83,20 @@ pub struct Config {
     pub max_results: Option<usize>,
     /// Chunk size for streaming processing. None disables streaming.
     pub stream_chunk_size: Option<usize>,
+    /// Whether batch mode is enabled (process multiple inputs at once).
+    pub batch_mode: bool,
+    /// Cache management operation (clear, stats, list). None means no cache operation.
+    #[serde(skip)]
+    pub cache_op: Option<String>,
+    /// Number of entries to show with cache list command.
+    #[serde(skip)]
+    pub cache_limit: i64,
+    /// Shell to generate completion script for. None means no completion generation.
+    #[serde(skip)]
+    pub generate_completion: Option<String>,
+    /// Whether TUI mode is enabled.
+    #[serde(default)]
+    pub tui_mode: bool,
 }
 
 impl Clone for Config {
@@ -110,6 +124,11 @@ impl Clone for Config {
             beam_width: self.beam_width,
             max_results: self.max_results,
             stream_chunk_size: self.stream_chunk_size,
+            batch_mode: self.batch_mode,
+            cache_op: self.cache_op.clone(),
+            cache_limit: self.cache_limit,
+            generate_completion: self.generate_completion.clone(),
+            tui_mode: self.tui_mode,
         }
     }
 }
@@ -179,6 +198,11 @@ impl Default for Config {
             beam_width: None,
             max_results: Some(10),
             stream_chunk_size: None,
+            batch_mode: false,
+            cache_op: None,
+            cache_limit: 10,
+            generate_completion: None,
+            tui_mode: false,
             colourscheme: HashMap::new(),
         };
 

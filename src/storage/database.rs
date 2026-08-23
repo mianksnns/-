@@ -430,6 +430,160 @@ pub fn delete_human_rejection(plaintext: &str) -> Result<usize, rusqlite::Error>
     conn_result
 }
 
+// === Cache Management Functions ===
+
+/// Cache statistics summary
+#[derive(Debug)]
+pub struct CacheStats {
+    /// Total number of cache entries
+    pub total_entries: usize,
+    /// Number of successful decode entries
+    pub successful_entries: usize,
+    /// Number of failed decode entries
+    pub failed_entries: usize,
+    /// Average execution time in milliseconds
+    pub avg_execution_time_ms: f64,
+    /// Oldest cache entry timestamp
+    pub oldest_entry: Option<String>,
+    /// Newest cache entry timestamp
+    pub newest_entry: Option<String>,
+}
+
+/// Get cache statistics from the database
+///
+/// Returns a CacheStats struct with summary information about the cache.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error
+pub fn get_cache_stats() -> Result<CacheStats, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    let total_entries: usize =
+        conn.query_row("SELECT COUNT(*) FROM cache", [], |row| row.get(0))?;
+
+    let successful_entries: usize = conn.query_row(
+        "SELECT COUNT(*) FROM cache WHERE successful = 1",
+        [],
+        |row| row.get(0),
+    )?;
+
+    let failed_entries: usize = conn.query_row(
+        "SELECT COUNT(*) FROM cache WHERE successful = 0",
+        [],
+        |row| row.get(0),
+    )?;
+
+    let avg_execution_time_ms: f64 = if total_entries > 0 {
+        conn.query_row(
+            "SELECT COALESCE(AVG(execution_time_ms), 0.0) FROM cache",
+            [],
+            |row| row.get(0),
+        )?
+    } else {
+        0.0
+    };
+
+    let oldest_entry: Option<String> = if total_entries > 0 {
+        Some(conn.query_row(
+            "SELECT MIN(timestamp) FROM cache",
+            [],
+            |row| row.get::<usize, String>(0),
+        )?)
+    } else {
+        None
+    };
+
+    let newest_entry: Option<String> = if total_entries > 0 {
+        Some(conn.query_row(
+            "SELECT MAX(timestamp) FROM cache",
+            [],
+            |row| row.get::<usize, String>(0),
+        )?)
+    } else {
+        None
+    };
+
+    Ok(CacheStats {
+        total_entries,
+        successful_entries,
+        failed_entries,
+        avg_execution_time_ms,
+        oldest_entry,
+        newest_entry,
+    })
+}
+
+/// List recent cache entries
+///
+/// Returns the most recent cache entries, limited by `limit` parameter.
+///
+/// # Arguments
+/// * `limit` - Maximum number of entries to return
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error
+pub fn list_cache_entries(
+    limit: usize,
+) -> Result<Vec<CacheRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT * FROM cache ORDER BY timestamp DESC LIMIT $1",
+    )?;
+
+    let rows = stmt.query_map([limit as i64], |row| {
+        let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+        let crack_json_vec: Vec<String> =
+            serde_json::from_str(&path_str).unwrap_or_default();
+
+        Ok(CacheRow {
+            uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
+                .unwrap_or_default(),
+            encoded_text: row.get_unwrap(1),
+            decoded_text: row.get_unwrap(2),
+            path: crack_json_vec,
+            successful: row.get_unwrap(4),
+            execution_time_ms: row.get_unwrap(5),
+            timestamp: row.get_unwrap(6),
+        })
+    })?;
+
+    let mut entries = Vec::new();
+    for row in rows {
+        entries.push(row?);
+    }
+    Ok(entries)
+}
+
+/// Clear all cache entries
+///
+/// Deletes all rows from the cache table.
+///
+/// Returns the number of deleted rows on success.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error
+pub fn clear_cache() -> Result<usize, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    conn.execute("DELETE FROM cache", [])
+}
+
+/// Clear all human rejection entries
+///
+/// Deletes all rows from the human_rejection table.
+///
+/// Returns the number of deleted rows on success.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error
+pub fn clear_human_rejections() -> Result<usize, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    conn.execute("DELETE FROM human_rejection", [])
+}
+
 #[cfg(test)]
 #[serial_test::serial]
 mod tests {
