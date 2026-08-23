@@ -78,6 +78,10 @@ use crate::decoders::straddling_checkerboard_decoder::StraddlingCheckerboardDeco
 use crate::decoders::tap_code_decoder::TapCodeDecoder;
 use crate::decoders::trifid_decoder::TrifidDecoder;
 use crate::decoders::two_square_decoder::TwoSquareDecoder;
+use crate::decoders::base122_decoder::Base122Decoder;
+use crate::decoders::xor_advanced_decoder::XorAdvancedDecoder;
+use crate::decoders::protobuf_deep_decoder::ProtobufDeepDecoder;
+use crate::decoders::weak_crypto_practical_decoder::WeakCryptoPracticalDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -342,6 +346,11 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let enigma = Decoder::<EnigmaDecoder>::new();
     let straddling = Decoder::<StraddlingCheckerboardDecoder>::new();
 
+    let base122 = Decoder::<Base122Decoder>::new();
+    let xor_advanced = Decoder::<XorAdvancedDecoder>::new();
+    let protobuf_deep = Decoder::<ProtobufDeepDecoder>::new();
+    let weak_crypto_practical = Decoder::<WeakCryptoPracticalDecoder>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -411,6 +420,10 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(chaocipher),
             Box::new(enigma),
             Box::new(straddling),
+            Box::new(base122),
+            Box::new(xor_advanced),
+            Box::new(protobuf_deep),
+            Box::new(weak_crypto_practical),
         ],
     }
 }

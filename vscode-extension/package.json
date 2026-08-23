@@ -36,6 +36,11 @@
         "command": "ciphey.showPath",
         "title": "Show Decode Path",
         "category": "Ciphey"
+      },
+      {
+        "command": "ciphey.showInfo",
+        "title": "Show WASM Info",
+        "category": "Ciphey"
       }
     ],
     "menus": {

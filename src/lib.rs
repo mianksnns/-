@@ -355,7 +355,7 @@ pub fn set_test_db_path() {
     let mut path = get_test_dir_path();
     std::fs::create_dir_all(&path).expect("Could not create .ciphey directory");
     path.push("database.sqlite");
-    let _ = crate::storage::database::DB_PATH.set(Some(path));
+    *crate::storage::database::DB_PATH.lock().unwrap() = Some(path);
 }
 
 /// Helper struct for testing database

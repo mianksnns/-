@@ -7,11 +7,12 @@
 use super::super::CheckResult;
 use super::super::CrackResult;
 use chrono::DateTime;
-use std::sync::OnceLock;
+use std::sync::{LazyLock, Mutex};
 use uuid::Uuid;
 
 /// Holds the global path to the database
-pub static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+pub static DB_PATH: LazyLock<Mutex<Option<std::path::PathBuf>>> =
+    LazyLock::new(|| Mutex::new(None));
 
 #[derive(Debug)]
 /// Struct representing a row in the human_rejection table
@@ -100,8 +101,8 @@ fn get_database_path() -> std::path::PathBuf {
 /// If a path is specified in DB_PATH, returns a Connection to that path
 /// Otherwise, opens a Connection to an in-memory database
 fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
-    match DB_PATH.get() {
-        Some(Some(path)) => rusqlite::Connection::open(path),
+    match DB_PATH.lock().unwrap().clone() {
+        Some(path) => rusqlite::Connection::open(path),
         _ => rusqlite::Connection::open_in_memory(),
     }
 }
@@ -114,18 +115,9 @@ fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
 /// If there's an error while setting the database path, prints warning
 /// to console and continues with the default DB_PATH
 pub fn setup_database() -> Result<(), rusqlite::Error> {
-    match DB_PATH.get() {
-        Some(_path) => (),
-        None => {
-            let db_result: Result<(), Option<std::path::PathBuf>> =
-                DB_PATH.set(Some(get_database_path()));
-            match db_result {
-                Ok(_) => (),
-                Err(_e) => {
-                    crate::cli_pretty_printing::warning("Error setting database path");
-                }
-            }
-        }
+    let mut db_path = DB_PATH.lock().unwrap();
+    if db_path.is_none() {
+        *db_path = Some(get_database_path());
     };
     init_database()?;
     Ok(())
@@ -633,7 +625,7 @@ mod tests {
 
     fn set_test_db_path() {
         let path = std::path::PathBuf::from(String::from("file::memory:?cache=shared"));
-        let _ = DB_PATH.set(Some(path));
+        *DB_PATH.lock().unwrap() = Some(path);
     }
 
     /// Helper function for generating a cache row

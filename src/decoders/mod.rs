@@ -204,6 +204,21 @@ pub mod pigpen_decoder;
 /// The tap_code_decoder module decodes Tap code messages
 pub mod tap_code_decoder;
 
+/// The base122_decoder module decodes Base122 encoded data
+pub mod base122_decoder;
+
+/// The xor_advanced_decoder module performs known-plaintext and two-ciphertext XOR attacks
+pub mod xor_advanced_decoder;
+
+/// The protobuf_deep_decoder module parses protobuf wire format with field recovery
+pub mod protobuf_deep_decoder;
+
+/// The hash_rainbow module provides compact local rainbow tables for fast hash lookups
+pub mod hash_rainbow;
+
+/// The weak_crypto_practical_decoder module attempts practical exploitation of weak crypto
+pub mod weak_crypto_practical_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -276,6 +291,11 @@ use straddling_checkerboard_decoder::StraddlingCheckerboardDecoder;
 use tap_code_decoder::TapCodeDecoder;
 use trifid_decoder::TrifidDecoder;
 use two_square_decoder::TwoSquareDecoder;
+
+use base122_decoder::Base122Decoder;
+use xor_advanced_decoder::XorAdvancedDecoder;
+use protobuf_deep_decoder::ProtobufDeepDecoder;
+use weak_crypto_practical_decoder::WeakCryptoPracticalDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -419,6 +439,14 @@ pub enum DecoderType {
     PigpenDecoder(pigpen_decoder::PigpenDecoder),
     /// tap code decoder
     TapCodeDecoder(tap_code_decoder::TapCodeDecoder),
+    /// base122 decoder
+    Base122Decoder(base122_decoder::Base122Decoder),
+    /// xor advanced decoder (known-plaintext and two-ciphertext attacks)
+    XorAdvancedDecoder(xor_advanced_decoder::XorAdvancedDecoder),
+    /// protobuf deep decoder (wire format field recovery)
+    ProtobufDeepDecoder(protobuf_deep_decoder::ProtobufDeepDecoder),
+    /// weak crypto practical cracker (AES-ECB, RSA attacks)
+    WeakCryptoPracticalDecoder(weak_crypto_practical_decoder::WeakCryptoPracticalDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -629,6 +657,22 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "Tap code",
             DecoderBox::new(Decoder::<TapCodeDecoder>::new()),
+        ),
+        (
+            "Base122",
+            DecoderBox::new(Decoder::<Base122Decoder>::new()),
+        ),
+        (
+            "XOR Advanced",
+            DecoderBox::new(Decoder::<XorAdvancedDecoder>::new()),
+        ),
+        (
+            "Protobuf Deep",
+            DecoderBox::new(Decoder::<ProtobufDeepDecoder>::new()),
+        ),
+        (
+            "Weak Crypto Practical",
+            DecoderBox::new(Decoder::<WeakCryptoPracticalDecoder>::new()),
         ),
     ])
 });

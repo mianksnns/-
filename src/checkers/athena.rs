@@ -11,6 +11,7 @@ use super::{
     binary_file_header_checker::BinaryFileHeaderChecker,
     checker_type::{Check, Checker},
     english::EnglishChecker,
+    enhanced::{EnhancedDetector, HeuristicDetector},
     human_checker,
     lemmeknow_checker::LemmeKnow,
     multilingual_checker::MultilingualChecker,
@@ -206,6 +207,18 @@ impl Check for Checker<Athena> {
                 check_res.text = structured_result.text;
                 check_res.description = structured_result.description;
                 return check_res;
+            }
+
+            if config.enhanced_detection {
+                let detector = HeuristicDetector::new(config.enhanced_config.clone());
+                let score = detector.detect(text);
+                if score >= config.enhanced_config.threshold {
+                    let mut check_res = CheckResult::new(self);
+                    check_res.is_identified = true;
+                    check_res.text = text.to_string();
+                    check_res.description = format!("Enhanced detector score: {:.3}", score);
+                    return check_res;
+                }
             }
         }
 

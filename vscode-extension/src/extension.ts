@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { decodeWithWasm, getWasmInfo, type WasmDecodeResult } from './wasmClient';
 
 /**
  * Extension activation.
@@ -30,7 +31,23 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
 
-    context.subscriptions.push(decodeCommand, decodeReplaceCommand, showPathCommand);
+    const showInfoCommand = vscode.commands.registerCommand(
+        'ciphey.showInfo',
+        async () => {
+            try {
+                const info = await getWasmInfo();
+                vscode.window.showInformationMessage(
+                    `${info.name} ${info.version}: ${info.supported_features.join(', ')}`
+                );
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    `Failed to load WASM module: ${error instanceof Error ? error.message : 'Unknown error'}`
+                );
+            }
+        }
+    );
+
+    context.subscriptions.push(decodeCommand, decodeReplaceCommand, showPathCommand, showInfoCommand);
 }
 
 /**
@@ -171,21 +188,21 @@ interface DecodeResult {
  * In production, this would call the WASM module or a CLI subprocess.
  */
 async function callDecoder(input: string, timeout: number): Promise<DecodeResult> {
-    // Placeholder implementation
-    // In a real implementation, this would:
-    // 1. Try to load the WASM module
-    // 2. Call the decode function
-    // 3. Return the result
-
-    // For now, return a mock result
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                success: false,
-                error: 'WASM module not loaded. Please build the WASM module first.',
-            });
-        }, 100);
-    });
+    try {
+        const result: WasmDecodeResult = await decodeWithWasm(input);
+        return {
+            success: result.success,
+            text: result.text ?? undefined,
+            path: result.path,
+            confidence: result.confidence,
+            error: result.error ?? undefined,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to load or execute WASM module',
+        };
+    }
 }
 
 /**

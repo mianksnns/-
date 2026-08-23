@@ -13,6 +13,7 @@ use super::{
     binary_file_header_checker::BinaryFileHeaderChecker,
     checker_type::{Check, Checker},
     english::EnglishChecker,
+    enhanced::{EnhancedDetector, HeuristicDetector},
     lemmeknow_checker::LemmeKnow,
     multilingual_checker::MultilingualChecker,
     password::PasswordChecker,
@@ -231,6 +232,26 @@ impl Check for Checker<WaitAthena> {
                 );
 
                 return check_res;
+            }
+
+            if config.enhanced_detection {
+                let detector = HeuristicDetector::new(config.enhanced_config.clone());
+                let score = detector.detect(text);
+                if score >= config.enhanced_config.threshold {
+                    let mut check_res = CheckResult::new(self);
+                    check_res.is_identified = true;
+                    check_res.text = text.to_string();
+                    check_res.description = format!("Enhanced detector score: {:.3}", score);
+
+                    wait_athena_storage::add_plaintext_result(
+                        check_res.text.clone(),
+                        check_res.description.clone(),
+                        "WaitAthena".to_string(),
+                        "EnhancedDetector".to_string(),
+                    );
+
+                    return check_res;
+                }
             }
         }
 

@@ -11,7 +11,6 @@
 
 use std::io::{self, Write};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
 
 /// Search status for TUI
 #[derive(Debug, Clone, PartialEq)]
