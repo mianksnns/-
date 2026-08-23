@@ -66,6 +66,18 @@ pub struct Opts {
     /// Enables enhanced plaintext detection with BERT model.
     #[arg(long)]
     enable_enhanced_detection: bool,
+    /// Search strategy to use: "astar" (default) or "beam".
+    #[arg(long)]
+    search_strategy: Option<String>,
+    /// Beam width for beam search. Higher values explore more paths but use more memory.
+    #[arg(long)]
+    beam_width: Option<usize>,
+    /// Maximum number of results to display in top-results mode.
+    #[arg(long)]
+    max_results: Option<usize>,
+    /// Enable streaming processing with specified chunk size (in characters).
+    #[arg(long)]
+    stream_chunk_size: Option<usize>,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -180,13 +192,38 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
 
     // Handle enhanced detection if enabled via CLI
     if opts.enable_enhanced_detection {
-        // Simply enable enhanced detection without downloading a model
-        // since the current version of gibberish-or-not doesn't support model downloading
         config.enhanced_detection = true;
         eprintln!(
             "{}",
             cli_pretty_printing::statement("Enhanced detection enabled.", None)
         );
+    }
+
+    // Handle search strategy
+    if let Some(strategy_str) = opts.search_strategy {
+        match strategy_str.parse::<crate::searchers::SearchStrategy>() {
+            Ok(strategy) => {
+                config.search_strategy = strategy;
+            }
+            Err(e) => {
+                eprintln!("{}", cli_pretty_printing::warning(&e));
+            }
+        }
+    }
+
+    // Handle beam width
+    if let Some(width) = opts.beam_width {
+        config.beam_width = Some(width);
+    }
+
+    // Handle max results
+    if let Some(max) = opts.max_results {
+        config.max_results = Some(max);
+    }
+
+    // Handle streaming chunk size
+    if let Some(chunk_size) = opts.stream_chunk_size {
+        config.stream_chunk_size = Some(chunk_size);
     }
 
     (text, config)

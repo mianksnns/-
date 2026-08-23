@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::thread;
 
 use crossbeam::channel::bounded;
+use serde::{Deserialize, Serialize};
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
@@ -18,11 +19,45 @@ use crate::{timer, DecoderResult};
 /// This module provides access to the A* search algorithm
 /// which uses a heuristic to prioritize decoders.
 mod astar;
+/// Beam search implementation for faster but less exhaustive decoding.
+mod beam_search;
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
 /// This module contains helper functions used by the A* search algorithm.
 mod helper_functions;
+/// Result ranking and confidence scoring for decoded results.
+pub mod result_ranker;
+/// Streaming/chunked processing for large inputs.
+mod streaming;
+
+/// Available search strategies.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SearchStrategy {
+    /// A* search (default, best-first with heuristic).
+    AStar,
+    /// Beam search (limited width, faster but less exhaustive).
+    BeamSearch,
+}
+
+impl Default for SearchStrategy {
+    fn default() -> Self {
+        SearchStrategy::AStar
+    }
+}
+
+impl std::str::FromStr for SearchStrategy {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "astar" | "a*" => Ok(SearchStrategy::AStar),
+            "beam" | "beam_search" | "beamsearch" => Ok(SearchStrategy::BeamSearch),
+            _ => Err(format!("Unknown search strategy: {}", s)),
+        }
+    }
+}
 
 /*pub struct Tree <'a> {
     // Wrap in a box because
@@ -43,22 +78,30 @@ mod helper_functions;
 ///    Else if we return an array, we add it to the children and go again.
 pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     let config = get_config();
+
+    if streaming::should_use_stream(input.len(), config.stream_chunk_size) {
+        let stream_config = streaming::StreamConfig {
+            chunk_size: config.stream_chunk_size.unwrap_or(streaming::DEFAULT_CHUNK_SIZE),
+            overlap_size: streaming::DEFAULT_OVERLAP_SIZE,
+        };
+        return streaming::process_streaming(&input, stream_config);
+    }
+
     let timeout = config.timeout;
     let timer = timer::start(timeout);
 
     let (result_sender, result_recv) = bounded::<Option<DecoderResult>>(1);
-    // For stopping the thread
     let stop = Arc::new(AtomicBool::new(false));
     let s = stop.clone();
-    // Use A* search algorithm instead of BFS
-    let handle = thread::spawn(move || astar::astar(input, result_sender, s));
 
-    // In top_results mode, we don't need to return a result immediately
-    // as the timer will display all results when it expires
+    let handle = match config.search_strategy {
+        SearchStrategy::BeamSearch => {
+            thread::spawn(move || beam_search::beam_search(input, result_sender, s))
+        }
+        SearchStrategy::AStar => thread::spawn(move || astar::astar(input, result_sender, s)),
+    };
+
     let top_results_mode = config.top_results;
-
-    // If we're in top_results mode, we'll store the first result to return
-    // at the end of the timer
     let mut first_result = None;
 
     loop {
@@ -66,16 +109,12 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
             log::info!("Found potential plaintext result");
             log::trace!("Result details: {:?}", res);
 
-            // In top_results mode, we store the first result but don't stop the search
             if top_results_mode {
                 if first_result.is_none() {
                     first_result = res;
                 }
-                // Continue searching for more results
             } else {
-                // In normal mode, we stop the search and return the result
                 stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                // Wait for the thread to finish
                 handle.join().unwrap();
                 return res;
             }
@@ -84,10 +123,8 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
         if timer.try_recv().is_ok() {
             stop.store(true, std::sync::atomic::Ordering::Relaxed);
             log::info!("Search timer expired");
-            // Wait for the thread to finish to ensure any ongoing human checker interaction completes
             handle.join().unwrap();
 
-            // In top_results mode, return the first result we found (if any)
             if top_results_mode {
                 return first_result;
             }
@@ -95,7 +132,6 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
             return None;
         }
 
-        // Small sleep to prevent CPU spinning
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
 }

@@ -9,6 +9,8 @@ use std::io::{self, BufRead, BufReader};
 use std::io::{Read, Write};
 use std::path::Path;
 
+use crate::searchers::SearchStrategy;
+
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
 /// The Config object is a default configuration object
@@ -73,6 +75,14 @@ pub struct Config {
     pub enhanced_detection: bool,
     /// Path to the enhanced detection model. If None, will use the default path.
     pub model_path: Option<String>,
+    /// Search strategy to use for decoding.
+    pub search_strategy: SearchStrategy,
+    /// Beam width for beam search. None uses the default (5).
+    pub beam_width: Option<usize>,
+    /// Maximum number of top results to display. None means use default (10).
+    pub max_results: Option<usize>,
+    /// Chunk size for streaming processing. None disables streaming.
+    pub stream_chunk_size: Option<usize>,
 }
 
 impl Clone for Config {
@@ -96,6 +106,10 @@ impl Clone for Config {
             colourscheme: self.colourscheme.clone(),
             enhanced_detection: self.enhanced_detection,
             model_path: self.model_path.clone(),
+            search_strategy: self.search_strategy,
+            beam_width: self.beam_width,
+            max_results: self.max_results,
+            stream_chunk_size: self.stream_chunk_size,
         }
     }
 }
@@ -161,6 +175,10 @@ impl Default for Config {
             wordlist: None,
             enhanced_detection: false,
             model_path: None,
+            search_strategy: SearchStrategy::AStar,
+            beam_width: None,
+            max_results: Some(10),
+            stream_chunk_size: None,
             colourscheme: HashMap::new(),
         };
 
@@ -254,6 +272,10 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "wordlist_path",
             "question",
             "colourscheme",
+            "search_strategy",
+            "beam_width",
+            "max_results",
+            "stream_chunk_size",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {

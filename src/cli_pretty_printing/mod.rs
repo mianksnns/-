@@ -548,6 +548,89 @@ pub fn warning_unknown_config_key(key: &str) {
     );
 }
 
+/// Display ranked results with confidence scores
+///
+/// Shows results sorted by confidence percentage, with color-coded
+/// confidence levels (green for high, yellow for medium, red for low).
+pub fn display_ranked_results(
+    results: &[crate::searchers::result_ranker::RankedResult],
+) {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+
+    if results.is_empty() {
+        println!("{}", success("No potential plaintexts found."));
+        return;
+    }
+
+    let max_results = config.max_results.unwrap_or(10);
+    let display_results = if results.len() > max_results {
+        &results[..max_results]
+    } else {
+        results
+    };
+
+    println!("{}", success("\n🎊 Top Decoding Results 🎊"));
+    println!(
+        "{}",
+        success(&format!(
+            "Showing {} of {} results:",
+            display_results.len(),
+            results.len()
+        ))
+    );
+
+    for (i, result) in display_results.iter().enumerate() {
+        let conf = result.confidence.as_percent();
+        let conf_color = if conf >= 80 {
+            "success"
+        } else if conf >= 50 {
+            "informational"
+        } else {
+            "warning"
+        };
+
+        println!(
+            "{}",
+            statement(
+                &format!("  #{} [{}% confidence] {}", i + 1, conf, result.plaintext.text),
+                Some(conf_color),
+            )
+        );
+        println!(
+            "{}",
+            statement(
+                &format!("      Path: {}", result.plaintext.decoder_name),
+                Some("informational"),
+            )
+        );
+        println!(
+            "{}",
+            statement(
+                &format!("      Checker: {}", result.plaintext.checker_name),
+                Some("informational"),
+            )
+        );
+    }
+
+    if results.len() > max_results {
+        println!(
+            "{}",
+            statement(
+                &format!(
+                    "  ... and {} more results (use --max-results to show more)",
+                    results.len() - max_results
+                ),
+                Some("informational"),
+            )
+        );
+    }
+
+    println!("{}", success("=== End of Results ===\n"));
+}
+
 /// Display all plaintext results collected by WaitAthena
 ///
 /// # Panics
