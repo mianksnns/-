@@ -35,6 +35,8 @@ use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
 use crate::decoders::base32hex_decoder::Base32HexDecoder;
+use crate::decoders::base36_decoder::Base36Decoder;
+use crate::decoders::base45_decoder::Base45Decoder;
 use crate::decoders::base62_decoder::Base62Decoder;
 use crate::decoders::base64url_decoder::Base64UrlDecoder;
 use crate::decoders::base85_decoder::Base85Decoder;
@@ -42,10 +44,13 @@ use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 use crate::decoders::compression_decoder::CompressionDecoder;
 use crate::decoders::hash_crack_decoder::HashCrackDecoder;
 use crate::decoders::html_entities_decoder::HtmlEntitiesDecoder;
+use crate::decoders::punycode_decoder::PunycodeDecoder;
 use crate::decoders::substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 use crate::decoders::unicode_escape_decoder::UnicodeEscapeDecoder;
+use crate::decoders::uuencode_decoder::UuencodeDecoder;
 use crate::decoders::xor_repeating_decoder::XorRepeatingDecoder;
 use crate::decoders::xor_single_byte_decoder::XorSingleByteDecoder;
+use crate::decoders::xxencode_decoder::XxencodeDecoder;
 
 use crate::decoders::affine_decoder::AffineDecoder;
 use crate::decoders::autokey_decoder::AutokeyDecoder;
@@ -295,12 +300,17 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let xor_single_byte = Decoder::<XorSingleByteDecoder>::new();
     let xor_repeating = Decoder::<XorRepeatingDecoder>::new();
     let compression = Decoder::<CompressionDecoder>::new();
+    let base36 = Decoder::<Base36Decoder>::new();
+    let base45 = Decoder::<Base45Decoder>::new();
     let base62 = Decoder::<Base62Decoder>::new();
     let base85 = Decoder::<Base85Decoder>::new();
     let base32hex = Decoder::<Base32HexDecoder>::new();
     let base64url = Decoder::<Base64UrlDecoder>::new();
     let html_entities = Decoder::<HtmlEntitiesDecoder>::new();
     let unicode_escape = Decoder::<UnicodeEscapeDecoder>::new();
+    let punycode = Decoder::<PunycodeDecoder>::new();
+    let uuencode = Decoder::<UuencodeDecoder>::new();
+    let xxencode = Decoder::<XxencodeDecoder>::new();
 
     let affine = Decoder::<AffineDecoder>::new();
     let beaufort = Decoder::<BeaufortDecoder>::new();
@@ -359,12 +369,17 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(xor_single_byte),
             Box::new(xor_repeating),
             Box::new(compression),
+            Box::new(base36),
+            Box::new(base45),
             Box::new(base62),
             Box::new(base85),
             Box::new(base32hex),
             Box::new(base64url),
             Box::new(html_entities),
             Box::new(unicode_escape),
+            Box::new(punycode),
+            Box::new(uuencode),
+            Box::new(xxencode),
             Box::new(affine),
             Box::new(beaufort),
             Box::new(autokey),

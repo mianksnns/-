@@ -95,6 +95,12 @@ pub mod compression_decoder;
 /// The base62_decoder module decodes base62
 pub mod base62_decoder;
 
+/// The base36_decoder module decodes base36
+pub mod base36_decoder;
+
+/// The base45_decoder module decodes base45
+pub mod base45_decoder;
+
 /// The base85_decoder module decodes base85 (Ascii85)
 pub mod base85_decoder;
 
@@ -109,6 +115,15 @@ pub mod html_entities_decoder;
 
 /// The unicode_escape_decoder module decodes unicode escape sequences
 pub mod unicode_escape_decoder;
+
+/// The punycode_decoder module decodes punycode labels
+pub mod punycode_decoder;
+
+/// The uuencode_decoder module decodes uuencode text
+pub mod uuencode_decoder;
+
+/// The xxencode_decoder module decodes xxencode text
+pub mod xxencode_decoder;
 
 /// The affine_decoder module decodes affine ciphers
 pub mod affine_decoder;
@@ -203,6 +218,8 @@ use vigenere_decoder::VigenereDecoder;
 use z85_decoder::Z85Decoder;
 
 use base32hex_decoder::Base32HexDecoder;
+use base36_decoder::Base36Decoder;
+use base45_decoder::Base45Decoder;
 use base62_decoder::Base62Decoder;
 use base64url_decoder::Base64UrlDecoder;
 use base85_decoder::Base85Decoder;
@@ -210,10 +227,13 @@ use brainfuck_interpreter::BrainfuckInterpreter;
 use compression_decoder::CompressionDecoder;
 use hash_crack_decoder::HashCrackDecoder;
 use html_entities_decoder::HtmlEntitiesDecoder;
+use punycode_decoder::PunycodeDecoder;
 use substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 use unicode_escape_decoder::UnicodeEscapeDecoder;
+use uuencode_decoder::UuencodeDecoder;
 use xor_repeating_decoder::XorRepeatingDecoder;
 use xor_single_byte_decoder::XorSingleByteDecoder;
+use xxencode_decoder::XxencodeDecoder;
 
 use affine_decoder::AffineDecoder;
 use autokey_decoder::AutokeyDecoder;
@@ -307,6 +327,10 @@ pub enum DecoderType {
     CompressionDecoder(compression_decoder::CompressionDecoder),
     /// base62 decoder
     Base62Decoder(base62_decoder::Base62Decoder),
+    /// base36 decoder
+    Base36Decoder(base36_decoder::Base36Decoder),
+    /// base45 decoder
+    Base45Decoder(base45_decoder::Base45Decoder),
     /// base85 decoder
     Base85Decoder(base85_decoder::Base85Decoder),
     /// base32hex decoder
@@ -317,6 +341,12 @@ pub enum DecoderType {
     HtmlEntitiesDecoder(html_entities_decoder::HtmlEntitiesDecoder),
     /// unicode escape decoder
     UnicodeEscapeDecoder(unicode_escape_decoder::UnicodeEscapeDecoder),
+    /// punycode decoder
+    PunycodeDecoder(punycode_decoder::PunycodeDecoder),
+    /// uuencode decoder
+    UuencodeDecoder(uuencode_decoder::UuencodeDecoder),
+    /// xxencode decoder
+    XxencodeDecoder(xxencode_decoder::XxencodeDecoder),
     /// affine decoder
     AffineDecoder(affine_decoder::AffineDecoder),
     /// beaufort decoder
@@ -471,6 +501,8 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             "compression",
             DecoderBox::new(Decoder::<CompressionDecoder>::new()),
         ),
+        ("Base36", DecoderBox::new(Decoder::<Base36Decoder>::new())),
+        ("Base45", DecoderBox::new(Decoder::<Base45Decoder>::new())),
         ("Base62", DecoderBox::new(Decoder::<Base62Decoder>::new())),
         ("Base85", DecoderBox::new(Decoder::<Base85Decoder>::new())),
         (
@@ -488,6 +520,18 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "Unicode escape",
             DecoderBox::new(Decoder::<UnicodeEscapeDecoder>::new()),
+        ),
+        (
+            "Punycode",
+            DecoderBox::new(Decoder::<PunycodeDecoder>::new()),
+        ),
+        (
+            "UUencode",
+            DecoderBox::new(Decoder::<UuencodeDecoder>::new()),
+        ),
+        (
+            "XXencode",
+            DecoderBox::new(Decoder::<XxencodeDecoder>::new()),
         ),
         ("Affine", DecoderBox::new(Decoder::<AffineDecoder>::new())),
         (
