@@ -6,6 +6,7 @@ use self::{
     lemmeknow_checker::LemmeKnow,
     password::PasswordChecker,
     regex_checker::RegexChecker,
+    structured_data::StructuredDataChecker,
     wait_athena::WaitAthena,
     wordlist::WordlistChecker,
 };
@@ -32,6 +33,8 @@ pub mod lemmeknow_checker;
 pub mod password;
 /// The Regex checker checks to see if the intended text matches the plaintext
 pub mod regex_checker;
+/// The Structured Data checker recognizes common serialization formats.
+pub mod structured_data;
 /// The WaitAthena Checker is a variant of Athena that collects all plaintexts found during the search
 pub mod wait_athena;
 /// The Wordlist checker checks if the text exactly matches any word in a user-provided wordlist
@@ -53,6 +56,8 @@ pub enum CheckerTypes {
     CheckPassword(Checker<PasswordChecker>),
     /// Wrapper for Wordlist Checker
     CheckWordlist(Checker<WordlistChecker>),
+    /// Wrapper for Structured Data Checker
+    CheckStructuredData(Checker<StructuredDataChecker>),
 }
 
 /// Macro that generates the sensitivity getters/setters for every checker
@@ -97,6 +102,9 @@ impl CheckerTypes {
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
             CheckerTypes::CheckPassword(password_checker) => password_checker.check(text),
             CheckerTypes::CheckWordlist(wordlist_checker) => wordlist_checker.check(text),
+            CheckerTypes::CheckStructuredData(structured_data_checker) => {
+                structured_data_checker.check(text)
+            }
         }
     }
 
@@ -108,6 +116,7 @@ impl CheckerTypes {
         CheckRegex,
         CheckPassword,
         CheckWordlist,
+        CheckStructuredData,
     );
 }
 
@@ -163,6 +172,10 @@ pub static CHECKER_MAP: Lazy<HashMap<&str, CheckerBox>> = Lazy::new(|| {
         (
             "Wordlist Checker",
             CheckerBox::new(Checker::<WordlistChecker>::new()),
+        ),
+        (
+            "Structured Data Checker",
+            CheckerBox::new(Checker::<StructuredDataChecker>::new()),
         ),
     ])
 });

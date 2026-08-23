@@ -1,8 +1,6 @@
 //! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 //! Given a filter object, return an array of decoders/crackers which have been filtered
 
-use std::sync::mpsc::channel;
-
 use crate::checkers::CheckerTypes;
 use crate::cli_pretty_printing;
 use crate::decoders::atbash_decoder::AtbashDecoder;
@@ -94,43 +92,39 @@ pub struct Decoders {
 }
 
 impl Decoders {
-    /// Iterate over all of the decoders and run .crack(text) on them
-    /// Then if the checker succeed, we short-circuit the iterator
-    /// and stop all processing as soon as possible.
+    /// Iterate over all decoders and run `.crack(text)` on them.
+    /// Results are selected in decoder registration order so parallel
+    /// execution does not change which successful result is returned.
     /// We are using Trait Objects
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
     /// But each struct shciphey the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
         trace!("Running .crack() on all decoders");
-        let (sender, receiver) = channel();
-        self.components
+        let mut results: Vec<(usize, CrackResult)> = self
+            .components
             .into_par_iter()
-            .try_for_each_with(sender, |s, i| {
-                let results = i.crack(text, &checker);
-                if results.success {
+            .enumerate()
+            .map(|(index, decoder)| {
+                let result = decoder.crack(text, &checker);
+                if result.success {
                     cli_pretty_printing::success(&format!(
-                        "DEBUG: filtration_system - Decoder {} succeeded, short-circuiting",
-                        results.decoder
+                        "DEBUG: filtration_system - Decoder {} succeeded",
+                        result.decoder
                     ));
-                    s.send(results.clone()).expect("expected no send error!");
-                    // returning None short-circuits the iterator
-                    // we don't process any further as we got success
-                    return None;
+                } else {
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: filtration_system - Decoder {} failed, continuing",
+                        result.decoder
+                    ));
                 }
-                cli_pretty_printing::success(&format!(
-                    "DEBUG: filtration_system - Decoder {} failed, continuing",
-                    results.decoder
-                ));
-                s.send(results.clone()).expect("expected no send error!");
-                // return Some(()) to indicate that continue processing
-                Some(())
-            });
+                (index, result)
+            })
+            .collect();
 
-        let mut all_results: Vec<CrackResult> = Vec::new();
-
-        while let Ok(result) = receiver.recv() {
-            // if we recv success, break.
+        results.sort_unstable_by_key(|(index, _)| *index);
+        let mut all_results = Vec::new();
+        for (_, result) in results {
             if result.success {
                 cli_pretty_printing::success(&format!("DEBUG: filtration_system - Received successful result from {}, returning Break", result.decoder));
                 return MyResults::Break(result);

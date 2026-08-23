@@ -14,6 +14,7 @@ use super::{
     lemmeknow_checker::LemmeKnow,
     password::PasswordChecker,
     regex_checker::RegexChecker,
+    structured_data::StructuredDataChecker,
     wordlist::WordlistChecker,
 };
 
@@ -30,6 +31,9 @@ static ENGLISH_CHECKER: Lazy<Checker<EnglishChecker>> = Lazy::new(Checker::<Engl
 static REGEX_CHECKER: Lazy<Checker<RegexChecker>> = Lazy::new(Checker::<RegexChecker>::new);
 static WORDLIST_CHECKER: Lazy<Checker<WordlistChecker>> =
     Lazy::new(Checker::<WordlistChecker>::new);
+/// Cached checker for JSON, XML, TOML, CSV, and YAML results.
+static STRUCTURED_DATA_CHECKER: Lazy<Checker<StructuredDataChecker>> =
+    Lazy::new(Checker::<StructuredDataChecker>::new);
 
 impl Check for Checker<Athena> {
     fn new() -> Self {
@@ -145,6 +149,18 @@ impl Check for Checker<Athena> {
                     "DEBUG: Athena english checker - human_result: {}, check_res.is_identified: {}",
                     human_result, check_res.is_identified
                 ));
+                return check_res;
+            }
+
+            let structured_data = STRUCTURED_DATA_CHECKER
+                .clone()
+                .with_sensitivity(self.sensitivity);
+            let structured_result = structured_data.check(text);
+            if structured_result.is_identified {
+                let mut check_res = CheckResult::new(&structured_data);
+                check_res.is_identified = true;
+                check_res.text = structured_result.text;
+                check_res.description = structured_result.description;
                 return check_res;
             }
         }
