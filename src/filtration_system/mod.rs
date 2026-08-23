@@ -40,10 +40,12 @@ use crate::decoders::base45_decoder::Base45Decoder;
 use crate::decoders::base62_decoder::Base62Decoder;
 use crate::decoders::base64url_decoder::Base64UrlDecoder;
 use crate::decoders::base85_decoder::Base85Decoder;
+use crate::decoders::bencode_decoder::BencodeDecoder;
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 use crate::decoders::compression_decoder::CompressionDecoder;
 use crate::decoders::hash_crack_decoder::HashCrackDecoder;
 use crate::decoders::html_entities_decoder::HtmlEntitiesDecoder;
+use crate::decoders::jwt_decoder::JwtDecoder;
 use crate::decoders::punycode_decoder::PunycodeDecoder;
 use crate::decoders::substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 use crate::decoders::unicode_escape_decoder::UnicodeEscapeDecoder;
@@ -305,8 +307,10 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let base62 = Decoder::<Base62Decoder>::new();
     let base85 = Decoder::<Base85Decoder>::new();
     let base32hex = Decoder::<Base32HexDecoder>::new();
+    let bencode = Decoder::<BencodeDecoder>::new();
     let base64url = Decoder::<Base64UrlDecoder>::new();
     let html_entities = Decoder::<HtmlEntitiesDecoder>::new();
+    let jwt = Decoder::<JwtDecoder>::new();
     let unicode_escape = Decoder::<UnicodeEscapeDecoder>::new();
     let punycode = Decoder::<PunycodeDecoder>::new();
     let uuencode = Decoder::<UuencodeDecoder>::new();
@@ -374,8 +378,10 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(base62),
             Box::new(base85),
             Box::new(base32hex),
+            Box::new(bencode),
             Box::new(base64url),
             Box::new(html_entities),
+            Box::new(jwt),
             Box::new(unicode_escape),
             Box::new(punycode),
             Box::new(uuencode),

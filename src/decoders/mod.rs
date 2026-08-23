@@ -107,11 +107,17 @@ pub mod base85_decoder;
 /// The base32hex_decoder module decodes base32hex
 pub mod base32hex_decoder;
 
+/// The bencode_decoder module decodes Bencode data
+pub mod bencode_decoder;
+
 /// The base64url_decoder module decodes base64url
 pub mod base64url_decoder;
 
 /// The html_entities_decoder module decodes HTML/XML entities
 pub mod html_entities_decoder;
+
+/// The jwt_decoder module decodes JWT tokens
+pub mod jwt_decoder;
 
 /// The unicode_escape_decoder module decodes unicode escape sequences
 pub mod unicode_escape_decoder;
@@ -223,10 +229,12 @@ use base45_decoder::Base45Decoder;
 use base62_decoder::Base62Decoder;
 use base64url_decoder::Base64UrlDecoder;
 use base85_decoder::Base85Decoder;
+use bencode_decoder::BencodeDecoder;
 use brainfuck_interpreter::BrainfuckInterpreter;
 use compression_decoder::CompressionDecoder;
 use hash_crack_decoder::HashCrackDecoder;
 use html_entities_decoder::HtmlEntitiesDecoder;
+use jwt_decoder::JwtDecoder;
 use punycode_decoder::PunycodeDecoder;
 use substitution_autocrack_decoder::SubstitutionAutocrackDecoder;
 use unicode_escape_decoder::UnicodeEscapeDecoder;
@@ -335,10 +343,14 @@ pub enum DecoderType {
     Base85Decoder(base85_decoder::Base85Decoder),
     /// base32hex decoder
     Base32HexDecoder(base32hex_decoder::Base32HexDecoder),
+    /// bencode decoder
+    BencodeDecoder(bencode_decoder::BencodeDecoder),
     /// base64url decoder
     Base64UrlDecoder(base64url_decoder::Base64UrlDecoder),
     /// html entities decoder
     HtmlEntitiesDecoder(html_entities_decoder::HtmlEntitiesDecoder),
+    /// jwt decoder
+    JwtDecoder(jwt_decoder::JwtDecoder),
     /// unicode escape decoder
     UnicodeEscapeDecoder(unicode_escape_decoder::UnicodeEscapeDecoder),
     /// punycode decoder
@@ -509,6 +521,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             "Base32hex",
             DecoderBox::new(Decoder::<Base32HexDecoder>::new()),
         ),
+        ("Bencode", DecoderBox::new(Decoder::<BencodeDecoder>::new())),
         (
             "Base64url",
             DecoderBox::new(Decoder::<Base64UrlDecoder>::new()),
@@ -517,6 +530,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             "HTML entities",
             DecoderBox::new(Decoder::<HtmlEntitiesDecoder>::new()),
         ),
+        ("JWT", DecoderBox::new(Decoder::<JwtDecoder>::new())),
         (
             "Unicode escape",
             DecoderBox::new(Decoder::<UnicodeEscapeDecoder>::new()),
