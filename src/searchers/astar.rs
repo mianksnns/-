@@ -22,8 +22,12 @@
 //! - g = depth in the search tree (cost so far)
 //! - h = heuristic value (estimated cost to goal)
 //!
-//! The current implementation uses a simple placeholder heuristic of 1.0,
-//! but has been improved with Cipher Identifier for better prioritization.
+//! The heuristic function combines multiple signals:
+//! - Decoder popularity and success rate
+//! - Depth penalty (adaptive coefficient)
+//! - String quality assessment
+//! - Common sequence pairing bonus
+//! - Cipher identification matching
 //!
 //! ## Parallel Processing
 //!
