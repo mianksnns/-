@@ -20,6 +20,8 @@ use std::collections::HashMap;
 
 /// Number of simulated-annealing iterations.
 const ITERATIONS: usize = 20_000;
+/// Number of random restarts used to reduce local-optimum failures.
+const RESTARTS: usize = 4;
 /// Starting temperature for the anneal.
 const START_TEMP: f64 = 5.0;
 /// Temperature reduction per iteration.
@@ -105,9 +107,27 @@ impl Crack for Decoder<SubstitutionAutocrackDecoder> {
 /// Solve a substitution cipher with simulated annealing.
 /// Returns a mapping from ciphertext letter (a-z) to plaintext letter (a-z).
 fn solve_substitution(ciphertext: &str) -> HashMap<char, char> {
-    // Build the bigram score table once.
     let bigrams = load_english_bigrams();
+    let mut best_mapping = HashMap::new();
+    let mut best_score = f64::NEG_INFINITY;
 
+    for _ in 0..RESTARTS {
+        let mapping = solve_substitution_once(ciphertext, &bigrams);
+        let score = score_mapping(ciphertext, &mapping, &bigrams);
+        if score > best_score {
+            best_score = score;
+            best_mapping = mapping;
+        }
+    }
+
+    best_mapping
+}
+
+/// Run one simulated-annealing pass from a random permutation.
+fn solve_substitution_once(
+    ciphertext: &str,
+    bigrams: &HashMap<(char, char), f64>,
+) -> HashMap<char, char> {
     // A mapping is `cipher_letter -> plaintext_letter`.
     // Start from a random permutation.
     let mut alphabet: Vec<char> = (b'a'..=b'z').map(char::from).collect();
@@ -119,7 +139,7 @@ fn solve_substitution(ciphertext: &str) -> HashMap<char, char> {
         .collect();
 
     // Score the initial mapping.
-    let mut current_score = score_mapping(ciphertext, &mapping, &bigrams);
+    let mut current_score = score_mapping(ciphertext, &mapping, bigrams);
     let mut best_mapping = mapping.clone();
     let mut best_score = current_score;
     let mut temperature = START_TEMP;
@@ -139,7 +159,7 @@ fn solve_substitution(ciphertext: &str) -> HashMap<char, char> {
         mapping.insert(cipher_a, plain_b);
         mapping.insert(cipher_b, plain_a);
 
-        let neighbour_score = score_mapping(ciphertext, &mapping, &bigrams);
+        let neighbour_score = score_mapping(ciphertext, &mapping, bigrams);
 
         // Accept improvements always, worse solutions with annealed probability.
         if neighbour_score >= current_score {
