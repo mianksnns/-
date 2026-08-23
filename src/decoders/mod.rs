@@ -110,6 +110,9 @@ pub mod base32hex_decoder;
 /// The bencode_decoder module decodes Bencode data
 pub mod bencode_decoder;
 
+/// The bech32_decoder module decodes Bech32 strings
+pub mod bech32_decoder;
+
 /// The base64url_decoder module decodes base64url
 pub mod base64url_decoder;
 
@@ -229,6 +232,7 @@ use base45_decoder::Base45Decoder;
 use base62_decoder::Base62Decoder;
 use base64url_decoder::Base64UrlDecoder;
 use base85_decoder::Base85Decoder;
+use bech32_decoder::Bech32Decoder;
 use bencode_decoder::BencodeDecoder;
 use brainfuck_interpreter::BrainfuckInterpreter;
 use compression_decoder::CompressionDecoder;
@@ -345,6 +349,8 @@ pub enum DecoderType {
     Base32HexDecoder(base32hex_decoder::Base32HexDecoder),
     /// bencode decoder
     BencodeDecoder(bencode_decoder::BencodeDecoder),
+    /// bech32 decoder
+    Bech32Decoder(bech32_decoder::Bech32Decoder),
     /// base64url decoder
     Base64UrlDecoder(base64url_decoder::Base64UrlDecoder),
     /// html entities decoder
@@ -522,6 +528,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             DecoderBox::new(Decoder::<Base32HexDecoder>::new()),
         ),
         ("Bencode", DecoderBox::new(Decoder::<BencodeDecoder>::new())),
+        ("Bech32", DecoderBox::new(Decoder::<Bech32Decoder>::new())),
         (
             "Base64url",
             DecoderBox::new(Decoder::<Base64UrlDecoder>::new()),

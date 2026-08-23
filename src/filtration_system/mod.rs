@@ -40,6 +40,7 @@ use crate::decoders::base45_decoder::Base45Decoder;
 use crate::decoders::base62_decoder::Base62Decoder;
 use crate::decoders::base64url_decoder::Base64UrlDecoder;
 use crate::decoders::base85_decoder::Base85Decoder;
+use crate::decoders::bech32_decoder::Bech32Decoder;
 use crate::decoders::bencode_decoder::BencodeDecoder;
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 use crate::decoders::compression_decoder::CompressionDecoder;
@@ -308,6 +309,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let base85 = Decoder::<Base85Decoder>::new();
     let base32hex = Decoder::<Base32HexDecoder>::new();
     let bencode = Decoder::<BencodeDecoder>::new();
+    let bech32 = Decoder::<Bech32Decoder>::new();
     let base64url = Decoder::<Base64UrlDecoder>::new();
     let html_entities = Decoder::<HtmlEntitiesDecoder>::new();
     let jwt = Decoder::<JwtDecoder>::new();
@@ -379,6 +381,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(base85),
             Box::new(base32hex),
             Box::new(bencode),
+            Box::new(bech32),
             Box::new(base64url),
             Box::new(html_entities),
             Box::new(jwt),
