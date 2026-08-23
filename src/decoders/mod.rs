@@ -109,6 +109,8 @@ pub mod base32hex_decoder;
 
 /// The bencode_decoder module decodes Bencode data
 pub mod bencode_decoder;
+/// The binary_serialization_decoder module detects compact binary serialization formats
+pub mod binary_serialization_decoder;
 
 /// The bech32_decoder module decodes Bech32 strings
 pub mod bech32_decoder;
@@ -234,6 +236,7 @@ use base64url_decoder::Base64UrlDecoder;
 use base85_decoder::Base85Decoder;
 use bech32_decoder::Bech32Decoder;
 use bencode_decoder::BencodeDecoder;
+use binary_serialization_decoder::BinarySerializationDecoder;
 use brainfuck_interpreter::BrainfuckInterpreter;
 use compression_decoder::CompressionDecoder;
 use hash_crack_decoder::HashCrackDecoder;
@@ -349,6 +352,8 @@ pub enum DecoderType {
     Base32HexDecoder(base32hex_decoder::Base32HexDecoder),
     /// bencode decoder
     BencodeDecoder(bencode_decoder::BencodeDecoder),
+    /// binary serialization decoder
+    BinarySerializationDecoder(binary_serialization_decoder::BinarySerializationDecoder),
     /// bech32 decoder
     Bech32Decoder(bech32_decoder::Bech32Decoder),
     /// base64url decoder
@@ -528,6 +533,10 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             DecoderBox::new(Decoder::<Base32HexDecoder>::new()),
         ),
         ("Bencode", DecoderBox::new(Decoder::<BencodeDecoder>::new())),
+        (
+            "Binary Serialization",
+            DecoderBox::new(Decoder::<BinarySerializationDecoder>::new()),
+        ),
         ("Bech32", DecoderBox::new(Decoder::<Bech32Decoder>::new())),
         (
             "Base64url",
