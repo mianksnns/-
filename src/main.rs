@@ -47,9 +47,7 @@ fn main() {
                 Some(result) => {
                     program_exiting_successful_decoding(result);
                 }
-                None => {
-                    ciphey::cli_pretty_printing::failed_to_decode()
-                }
+                None => ciphey::cli_pretty_printing::failed_to_decode(),
             }
         }
     }
@@ -117,8 +115,11 @@ fn run_batch(inputs: Vec<String>, config: ciphey::config::Config) {
                     "error": "Failed to decode",
                 }),
             })
-        .collect();
-        println!("{}", serde_json::to_string_pretty(&json_results).unwrap_or_default());
+            .collect();
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&json_results).unwrap_or_default()
+        );
     } else {
         for (i, (input, result)) in results.iter().enumerate() {
             match result {

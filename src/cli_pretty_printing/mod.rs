@@ -555,9 +555,7 @@ pub fn warning_unknown_config_key(key: &str) {
 ///
 /// Shows results sorted by confidence percentage, with color-coded
 /// confidence levels (green for high, yellow for medium, red for low).
-pub fn display_ranked_results(
-    results: &[crate::searchers::result_ranker::RankedResult],
-) {
+pub fn display_ranked_results(results: &[crate::searchers::result_ranker::RankedResult]) {
     let config = crate::config::get_config();
     if config.api_mode {
         return;
@@ -598,7 +596,12 @@ pub fn display_ranked_results(
         println!(
             "{}",
             statement(
-                &format!("  #{} [{}% confidence] {}", i + 1, conf, result.plaintext.text),
+                &format!(
+                    "  #{} [{}% confidence] {}",
+                    i + 1,
+                    conf,
+                    result.plaintext.text
+                ),
                 Some(conf_color),
             )
         );
@@ -767,7 +770,10 @@ pub fn display_decode_path_tree(path: &[crate::decoders::crack_results::CrackRes
         println!(
             "{}",
             statement(
-                &format!("{}{}{}{}", connector, crack_result.decoder, key_info, status_icon),
+                &format!(
+                    "{}{}{}{}",
+                    connector, crack_result.decoder, key_info, status_icon
+                ),
                 Some("informational"),
             )
         );
@@ -797,7 +803,10 @@ pub fn display_decode_path_detailed(path: &[crate::decoders::crack_results::Crac
         return;
     }
 
-    println!("{}", statement("\nDetailed Decode Path:", Some("informational")));
+    println!(
+        "{}",
+        statement("\nDetailed Decode Path:", Some("informational"))
+    );
 
     for (i, crack_result) in path.iter().enumerate() {
         let step_num = i + 1;
@@ -806,17 +815,17 @@ pub fn display_decode_path_detailed(path: &[crate::decoders::crack_results::Crac
         println!(
             "{}",
             statement(
-                &format!("  Step {} [{}] {}", step_num, status_icon, crack_result.decoder),
+                &format!(
+                    "  Step {} [{}] {}",
+                    step_num, status_icon, crack_result.decoder
+                ),
                 Some("informational"),
             )
         );
 
         // Show the transformation if available
         if !crack_result.success && i == path.len() - 1 {
-            println!(
-                "{}",
-                statement("    (final step)", Some("informational")),
-            );
+            println!("{}", statement("    (final step)", Some("informational")),);
         }
     }
     println!();

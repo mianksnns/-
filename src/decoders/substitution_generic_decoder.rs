@@ -74,7 +74,10 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
                     decoded_strings.insert(text);
                 }
             } else if target_type == "binary" && is_binary_like(&substituted) {
-                trace!("Found potential binary substitution candidate: {}", substituted);
+                trace!(
+                    "Found potential binary substitution candidate: {}",
+                    substituted
+                );
                 decoded_strings.insert(substituted);
             }
         }

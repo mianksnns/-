@@ -241,26 +241,28 @@ pub fn handle_cache_command(cache_op: &str, cache_limit: i64) -> bool {
                 Err(e) => eprintln!("Error clearing human rejections: {}", e),
             }
         }
-        "stats" => {
-            match database::get_cache_stats() {
-                Ok(stats) => {
-                    println!("=== Cache Statistics ===");
-                    println!("Total entries: {}", stats.total_entries);
-                    println!("Successful: {}", stats.successful_entries);
-                    println!("Failed: {}", stats.failed_entries);
-                    println!("Avg execution time: {:.2} ms", stats.avg_execution_time_ms);
-                    if let Some(oldest) = &stats.oldest_entry {
-                        println!("Oldest entry: {}", oldest);
-                    }
-                    if let Some(newest) = &stats.newest_entry {
-                        println!("Newest entry: {}", newest);
-                    }
+        "stats" => match database::get_cache_stats() {
+            Ok(stats) => {
+                println!("=== Cache Statistics ===");
+                println!("Total entries: {}", stats.total_entries);
+                println!("Successful: {}", stats.successful_entries);
+                println!("Failed: {}", stats.failed_entries);
+                println!("Avg execution time: {:.2} ms", stats.avg_execution_time_ms);
+                if let Some(oldest) = &stats.oldest_entry {
+                    println!("Oldest entry: {}", oldest);
                 }
-                Err(e) => eprintln!("Error getting cache stats: {}", e),
+                if let Some(newest) = &stats.newest_entry {
+                    println!("Newest entry: {}", newest);
+                }
             }
-        }
+            Err(e) => eprintln!("Error getting cache stats: {}", e),
+        },
         "list" => {
-            let limit = if cache_limit > 0 { cache_limit as usize } else { 10 };
+            let limit = if cache_limit > 0 {
+                cache_limit as usize
+            } else {
+                10
+            };
             match database::list_cache_entries(limit) {
                 Ok(entries) => {
                     if entries.is_empty() {
@@ -296,7 +298,10 @@ pub fn handle_cache_command(cache_op: &str, cache_limit: i64) -> bool {
             }
         }
         _ => {
-            eprintln!("Unknown cache operation: '{}'. Use 'clear', 'stats', or 'list'.", cache_op);
+            eprintln!(
+                "Unknown cache operation: '{}'. Use 'clear', 'stats', or 'list'.",
+                cache_op
+            );
         }
     }
     true
@@ -344,7 +349,10 @@ pub fn handle_generate_completion(shell: &str) {
             println!("{}", String::from_utf8_lossy(&buf));
         }
         _ => {
-            eprintln!("Unsupported shell: '{}'. Supported shells: bash, zsh, fish, powershell, elvish", shell);
+            eprintln!(
+                "Unsupported shell: '{}'. Supported shells: bash, zsh, fish, powershell, elvish",
+                shell
+            );
             std::process::exit(1);
         }
     }

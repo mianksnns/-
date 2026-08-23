@@ -31,11 +31,7 @@ pub struct RankedResult {
 /// - Checker confidence (40%): How reliable is the checker that identified this
 /// - Path quality (30%): Shorter decode paths are more likely correct
 /// - String quality (30%): Quality of the decoded string itself
-pub fn calculate_confidence(
-    checker_name: &str,
-    path_length: usize,
-    text: &str,
-) -> Confidence {
+pub fn calculate_confidence(checker_name: &str, path_length: usize, text: &str) -> Confidence {
     let checker_confidence = get_checker_confidence(checker_name);
     let path_quality = calculate_path_quality(path_length);
     let string_quality = calculate_string_quality(text);
@@ -97,11 +93,7 @@ pub fn decoder_result_to_ranked(
             description: format!(
                 "Decoded at depth {} via {}",
                 result.path.len(),
-                result
-                    .path
-                    .last()
-                    .map(|r| r.decoder)
-                    .unwrap_or("unknown")
+                result.path.last().map(|r| r.decoder).unwrap_or("unknown")
             ),
             checker_name: checker_name.to_string(),
             decoder_name: result

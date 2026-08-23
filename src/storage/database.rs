@@ -485,21 +485,21 @@ pub fn get_cache_stats() -> Result<CacheStats, rusqlite::Error> {
     };
 
     let oldest_entry: Option<String> = if total_entries > 0 {
-        Some(conn.query_row(
-            "SELECT MIN(timestamp) FROM cache",
-            [],
-            |row| row.get::<usize, String>(0),
-        )?)
+        Some(
+            conn.query_row("SELECT MIN(timestamp) FROM cache", [], |row| {
+                row.get::<usize, String>(0)
+            })?,
+        )
     } else {
         None
     };
 
     let newest_entry: Option<String> = if total_entries > 0 {
-        Some(conn.query_row(
-            "SELECT MAX(timestamp) FROM cache",
-            [],
-            |row| row.get::<usize, String>(0),
-        )?)
+        Some(
+            conn.query_row("SELECT MAX(timestamp) FROM cache", [], |row| {
+                row.get::<usize, String>(0)
+            })?,
+        )
     } else {
         None
     };
@@ -524,22 +524,16 @@ pub fn get_cache_stats() -> Result<CacheStats, rusqlite::Error> {
 /// # Errors
 ///
 /// Returns rusqlite::Error on database error
-pub fn list_cache_entries(
-    limit: usize,
-) -> Result<Vec<CacheRow>, rusqlite::Error> {
+pub fn list_cache_entries(limit: usize) -> Result<Vec<CacheRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let mut stmt = conn.prepare(
-        "SELECT * FROM cache ORDER BY timestamp DESC LIMIT $1",
-    )?;
+    let mut stmt = conn.prepare("SELECT * FROM cache ORDER BY timestamp DESC LIMIT $1")?;
 
     let rows = stmt.query_map([limit as i64], |row| {
         let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-        let crack_json_vec: Vec<String> =
-            serde_json::from_str(&path_str).unwrap_or_default();
+        let crack_json_vec: Vec<String> = serde_json::from_str(&path_str).unwrap_or_default();
 
         Ok(CacheRow {
-            uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                .unwrap_or_default(),
+            uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str()).unwrap_or_default(),
             encoded_text: row.get_unwrap(1),
             decoded_text: row.get_unwrap(2),
             path: crack_json_vec,

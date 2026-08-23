@@ -74,10 +74,7 @@ pub fn split_into_chunks(input: &str, config: &StreamConfig) -> Vec<(String, boo
 ///
 /// Returns the first successful result found across all chunks.
 /// If no chunk produces a result, returns None.
-pub fn process_streaming(
-    input: &str,
-    config: StreamConfig,
-) -> Option<DecoderResult> {
+pub fn process_streaming(input: &str, config: StreamConfig) -> Option<DecoderResult> {
     let chunks = split_into_chunks(input, &config);
     debug!(
         "Streaming: split input into {} chunks (chunk_size={}, overlap={})",
@@ -106,10 +103,7 @@ pub fn process_streaming(
 /// Process input in streaming fashion, collecting all chunk results
 ///
 /// Returns results from all chunks that produced successful decodes.
-pub fn process_streaming_collect_all(
-    input: &str,
-    config: StreamConfig,
-) -> Vec<DecoderResult> {
+pub fn process_streaming_collect_all(input: &str, config: StreamConfig) -> Vec<DecoderResult> {
     let chunks = split_into_chunks(input, &config);
     let mut results = Vec::new();
 

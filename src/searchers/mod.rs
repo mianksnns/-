@@ -81,7 +81,9 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
 
     if streaming::should_use_stream(input.len(), config.stream_chunk_size) {
         let stream_config = streaming::StreamConfig {
-            chunk_size: config.stream_chunk_size.unwrap_or(streaming::DEFAULT_CHUNK_SIZE),
+            chunk_size: config
+                .stream_chunk_size
+                .unwrap_or(streaming::DEFAULT_CHUNK_SIZE),
             overlap_size: streaming::DEFAULT_OVERLAP_SIZE,
         };
         return streaming::process_streaming(&input, stream_config);

@@ -232,10 +232,7 @@ pub fn is_tui_supported() -> bool {
 ///
 /// This is a simplified TUI that shows progress during decoding.
 /// Returns the decoding result if successful.
-pub fn run_tui(
-    input: &str,
-    config: crate::config::Config,
-) -> Option<crate::DecoderResult> {
+pub fn run_tui(input: &str, config: crate::config::Config) -> Option<crate::DecoderResult> {
     use crate::perform_cracking;
 
     // Check if TUI is supported
