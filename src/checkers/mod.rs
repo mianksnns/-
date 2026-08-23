@@ -30,6 +30,8 @@ pub mod checker_type;
 pub mod default_checker;
 /// The English Checker is a checker that checks if the input is English
 pub mod english;
+/// Enhanced plaintext detection using ML models (BERT) and heuristics.
+pub mod enhanced;
 /// The Human Checker asks humans if the expected plaintext is real plaintext
 pub mod human_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.

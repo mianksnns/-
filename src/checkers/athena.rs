@@ -47,7 +47,6 @@ static BINARY_FILE_HEADER_CHECKER: Lazy<Checker<BinaryFileHeaderChecker>> =
 impl Check for Checker<Athena> {
     fn new() -> Self {
         Checker {
-            // TODO: Update fields with proper values
             name: "Athena Checker",
             description: "Runs all available checkers",
             link: "",

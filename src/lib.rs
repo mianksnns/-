@@ -42,6 +42,10 @@ mod filtration_system;
 /// The searcher is the thing which searches for the plaintext
 /// It is the core of the program.
 mod searchers;
+/// Security module for resource limits and DoS protection
+pub mod security;
+/// Steganography detection and extraction
+pub mod steganography;
 /// Storage module for dictionaries and invisible characters
 pub mod storage;
 /// Timer for internal use

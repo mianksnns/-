@@ -97,6 +97,9 @@ pub struct Config {
     /// Whether TUI mode is enabled.
     #[serde(default)]
     pub tui_mode: bool,
+    /// Enhanced detection configuration.
+    #[serde(default)]
+    pub enhanced_config: crate::checkers::enhanced::EnhancedConfig,
 }
 
 impl Clone for Config {
@@ -129,6 +132,7 @@ impl Clone for Config {
             cache_limit: self.cache_limit,
             generate_completion: self.generate_completion.clone(),
             tui_mode: self.tui_mode,
+            enhanced_config: self.enhanced_config.clone(),
         }
     }
 }
@@ -203,6 +207,7 @@ impl Default for Config {
             cache_limit: 10,
             generate_completion: None,
             tui_mode: false,
+            enhanced_config: crate::checkers::enhanced::EnhancedConfig::default(),
             colourscheme: HashMap::new(),
         };
 

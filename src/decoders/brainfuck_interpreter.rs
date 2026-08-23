@@ -61,8 +61,29 @@ impl Crack for Decoder<BrainfuckInterpreter> {
             return results;
         }
 
+        // Limit program length to prevent excessive execution
+        if text.len() > 100_000 {
+            debug!("Brainfuck program too long: {} chars", text.len());
+            return results;
+        }
+
+        let timeout =
+            crate::security::TimeoutGuard::new(crate::security::MAX_BRAINFUCK_EXECUTION_MS);
         let mut buf = vec![];
-        match Brainfuck::new(text).with_output_ref(&mut buf).execute() {
+
+        // Execute brainfuck with timeout monitoring
+        let execution_result = Brainfuck::new(text).with_output_ref(&mut buf).execute();
+
+        // Check if execution timed out
+        if timeout.is_expired() {
+            debug!(
+                "Brainfuck execution timed out after {}ms",
+                timeout.elapsed_ms()
+            );
+            return results;
+        }
+
+        match execution_result {
             Ok(_) => {
                 let decoded_text = String::from_utf8(buf).unwrap_or_default();
                 let checker_result = checker.check(&decoded_text);

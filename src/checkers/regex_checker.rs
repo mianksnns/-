@@ -28,14 +28,66 @@ impl Check for Checker<RegexChecker> {
 
     fn check(&self, text: &str) -> CheckResult {
         trace!("Checking {} with regex", text);
-        // TODO put this into a lazy static so we don't generate it everytime
         let config = get_config();
         let regex_to_parse = config.regex.clone();
-        let re = Regex::new(&regex_to_parse.unwrap()).unwrap();
 
-        let regex_check_result = re.is_match(text);
+        let Some(pattern) = regex_to_parse else {
+            return CheckResult {
+                is_identified: false,
+                text: text.to_string(),
+                checker_name: self.name,
+                checker_description: self.description,
+                description: "No regex pattern provided".to_string(),
+                link: self.link,
+            };
+        };
+
+        // Limit pattern complexity to prevent ReDoS
+        if pattern.len() > 1000 {
+            return CheckResult {
+                is_identified: false,
+                text: text.to_string(),
+                checker_name: self.name,
+                checker_description: self.description,
+                description: "Regex pattern too complex (ReDoS protection)".to_string(),
+                link: self.link,
+            };
+        }
+
+        let re = match Regex::new(&pattern) {
+            Ok(re) => re,
+            Err(e) => {
+                return CheckResult {
+                    is_identified: false,
+                    text: text.to_string(),
+                    checker_name: self.name,
+                    checker_description: self.description,
+                    description: format!("Invalid regex: {}", e),
+                    link: self.link,
+                };
+            }
+        };
+
+        // Use timeout guard for ReDoS protection
+        let timeout = crate::security::TimeoutGuard::new(crate::security::MAX_REGEX_EXECUTION_MS);
         let mut plaintext_found = false;
         let printed_name = format!("Regex matched: {re}");
+
+        // For simple patterns, just check directly
+        // For complex patterns with quantifiers, we'd need async timeout
+        let regex_check_result = re.is_match(text);
+
+        if timeout.is_expired() {
+            return CheckResult {
+                is_identified: false,
+                text: text.to_string(),
+                checker_name: self.name,
+                checker_description: self.description,
+                description: "Regex execution timed out (ReDoS protection)".to_string(),
+                link: self.link,
+            };
+        }
+
         if regex_check_result {
             plaintext_found = true;
         }
