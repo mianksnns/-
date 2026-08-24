@@ -7,12 +7,28 @@
 use super::super::CheckResult;
 use super::super::CrackResult;
 use chrono::DateTime;
-use std::sync::{LazyLock, Mutex};
+use std::cell::RefCell;
+use std::sync::OnceLock;
 use uuid::Uuid;
 
 /// Holds the global path to the database
-pub static DB_PATH: LazyLock<Mutex<Option<std::path::PathBuf>>> =
-    LazyLock::new(|| Mutex::new(None));
+pub static DB_PATH: OnceLock<std::path::PathBuf> = OnceLock::new();
+
+thread_local! {
+    static TEST_DB_PATH: RefCell<Option<std::path::PathBuf>> = const { RefCell::new(None) };
+}
+
+pub(crate) fn set_test_db_path_override(path: Option<std::path::PathBuf>) {
+    TEST_DB_PATH.with(|slot| {
+        *slot.borrow_mut() = path;
+    });
+}
+
+fn current_db_path() -> Option<std::path::PathBuf> {
+    TEST_DB_PATH
+        .with(|slot| slot.borrow().clone())
+        .or_else(|| DB_PATH.get().cloned())
+}
 
 #[derive(Debug)]
 /// Struct representing a row in the human_rejection table
@@ -101,7 +117,7 @@ fn get_database_path() -> std::path::PathBuf {
 /// If a path is specified in DB_PATH, returns a Connection to that path
 /// Otherwise, opens a Connection to an in-memory database
 fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
-    match DB_PATH.lock().unwrap().clone() {
+    match current_db_path() {
         Some(path) => rusqlite::Connection::open(path),
         _ => rusqlite::Connection::open_in_memory(),
     }
@@ -115,10 +131,7 @@ fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
 /// If there's an error while setting the database path, prints warning
 /// to console and continues with the default DB_PATH
 pub fn setup_database() -> Result<(), rusqlite::Error> {
-    let mut db_path = DB_PATH.lock().unwrap();
-    if db_path.is_none() {
-        *db_path = Some(get_database_path());
-    };
+    let _ = DB_PATH.get_or_init(get_database_path);
     init_database()?;
     Ok(())
 }
@@ -624,8 +637,13 @@ mod tests {
     }
 
     fn set_test_db_path() {
-        let path = std::path::PathBuf::from(String::from("file::memory:?cache=shared"));
-        *DB_PATH.lock().unwrap() = Some(path);
+        let mut path = dirs::home_dir().expect("Could not find home directory");
+        path.push(".ciphey");
+        path.push("test");
+        path.push(format!("{}", Uuid::new_v4()));
+        path.push("database.sqlite");
+        let _ = std::fs::create_dir_all(path.parent().unwrap());
+        set_test_db_path_override(Some(path));
     }
 
     /// Helper function for generating a cache row
