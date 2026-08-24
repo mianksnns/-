@@ -7,11 +7,17 @@ use crate::decoders::interface::Crack;
 use crate::CrackResult;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 /// Track decoder success rates for adaptive learning
 pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+
+fn decoder_stats() -> MutexGuard<'static, HashMap<String, (usize, usize)>> {
+    DECODER_SUCCESS_RATES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 /// Update decoder statistics based on success or failure
 ///
@@ -20,7 +26,7 @@ pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
 /// * `decoder` - The name of the decoder
 /// * `success` - Whether the decoder was successful
 pub fn update_decoder_stats(decoder: &str, success: bool) {
-    let mut stats = DECODER_SUCCESS_RATES.lock().unwrap();
+    let mut stats = decoder_stats();
     let (successes, total) = stats.entry(decoder.to_string()).or_insert((0, 0));
 
     if success {
@@ -41,7 +47,7 @@ pub fn update_decoder_stats(decoder: &str, success: bool) {
 ///
 /// * The success rate as a float between 0.0 and 1.0
 pub fn get_decoder_success_rate(decoder: &str) -> f32 {
-    let stats = DECODER_SUCCESS_RATES.lock().unwrap();
+    let stats = decoder_stats();
     if let Some((successes, total)) = stats.get(decoder) {
         if *total > 0 {
             return *successes as f32 / *total as f32;

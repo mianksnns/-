@@ -7,6 +7,18 @@ use ciphey::decoders::interface::{Crack, Decoder};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use env_logger::Builder;
 use log::LevelFilter;
+use std::sync::Once;
+
+static BENCH_CONFIG: Once = Once::new();
+
+fn init_bench_config() {
+    BENCH_CONFIG.call_once(|| {
+        let mut config = Config::default();
+        config.api_mode = true;
+        config.verbose = 0;
+        set_global_config(config);
+    });
+}
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     // Initialize logger with only error level to suppress debug messages
@@ -14,11 +26,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     builder.filter_level(LevelFilter::Error);
     builder.init();
 
-    // Setup global config to suppress output
-    let mut config = Config::default();
-    config.api_mode = true;
-    config.verbose = 0;
-    set_global_config(config);
+    init_bench_config();
 
     let decode_base64 = Decoder::<Base64Decoder>::new();
     let athena_checker = Checker::<Athena>::new();

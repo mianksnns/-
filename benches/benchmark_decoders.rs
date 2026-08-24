@@ -14,7 +14,19 @@ use ciphey::decoders::{
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use env_logger::Builder;
 use log::LevelFilter;
+use std::sync::Once;
 use std::time::Duration;
+
+static BENCH_CONFIG: Once = Once::new();
+
+fn init_bench_config() {
+    BENCH_CONFIG.call_once(|| {
+        let mut config = Config::default();
+        config.api_mode = true;
+        config.verbose = 0;
+        set_global_config(config);
+    });
+}
 
 // Test cases for different decoders
 struct DecoderTestCase<'a> {
@@ -75,11 +87,7 @@ pub fn benchmark_decoders(c: &mut Criterion) {
     builder.filter_level(LevelFilter::Error);
     builder.init();
 
-    // Setup global config to suppress output
-    let mut config = Config::default();
-    config.api_mode = true;
-    config.verbose = 0;
-    set_global_config(config);
+    init_bench_config();
 
     // Create a benchmark group with appropriate measurement time
     let mut group = c.benchmark_group("decoder_performance");

@@ -258,10 +258,12 @@ pub fn beam_search(
     let seen_results: DashSet<String, ahash::RandomState> =
         DashSet::with_hasher(ahash::RandomState::new());
 
+    let initial_total_cost = generate_heuristic(&initial.text[0], &initial.path, &None);
+
     let mut current_beam: Vec<BeamNode> = vec![BeamNode {
         state: initial,
         cost: 0,
-        total_cost: 0.0,
+        total_cost: initial_total_cost,
         next_decoder_name: None,
     }];
 

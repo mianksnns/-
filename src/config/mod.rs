@@ -1,6 +1,5 @@
 /// import general checker
 use lemmeknow::Identifier;
-use memmap2::Mmap;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -319,8 +318,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
     config
 }
 
-/// Loads a wordlist from a file into a HashSet for efficient lookups
-/// Uses memory mapping for large files to improve performance and memory usage
+/// Loads a wordlist from a file into a HashSet for efficient lookups.
 ///
 /// # Arguments
 /// * `path` - Path to the wordlist file
@@ -333,57 +331,37 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
 /// This function will return an error if:
 /// * The file does not exist
 /// * The file cannot be opened due to permissions
-/// * The file cannot be memory-mapped
 /// * The file contains invalid UTF-8 characters
-///
-/// # Safety
-/// This implementation uses memory mapping for large files.
-/// `unsafe { Mmap::map(&file) }` is required because the map could become invalid
-/// if the underlying file is modified while the mapping is in use.
 pub fn load_wordlist<P: AsRef<Path>>(path: P) -> io::Result<HashSet<String>> {
     let file = File::open(path)?;
-    let file_size = file.metadata()?.len();
-
-    // For small files (under 10MB), use regular file reading
-    // This threshold was chosen because:
-    // 1. Most wordlists under 10MB can be loaded quickly with minimal memory overhead
-    // 2. Memory mapping has overhead that may not be worth it for small files
-    // 3. 10MB allows for roughly 1 million words (assuming average word length of 10 chars)
-    if file_size < 10_000_000 {
-        // 10MB threshold
-        let reader = BufReader::new(file);
-        let mut wordlist = HashSet::new();
-
-        for word in reader.lines().map_while(Result::ok) {
-            let trimmed = word.trim().to_string();
-            if !trimmed.is_empty() {
-                wordlist.insert(trimmed);
-            }
-        }
-
-        Ok(wordlist)
-    } else {
-        // For large files, use memory mapping
-        // First create the memory map
-        let mmap = unsafe { Mmap::map(&file)? };
-
-        // Verify the file contains valid UTF-8 before proceeding
-        let mut wordlist = HashSet::new();
-        let content = std::str::from_utf8(&mmap).map_err(|_| {
-            io::Error::new(
-                io::ErrorKind::InvalidData,
-                "Wordlist file contains invalid UTF-8",
-            )
-        })?;
-        for line in content.lines() {
-            let trimmed = line.trim();
-            if !trimmed.is_empty() {
-                wordlist.insert(trimmed.to_string());
-            }
-        }
-
-        Ok(wordlist)
+    if !file.metadata()?.is_file() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Wordlist path must point to a regular file",
+        ));
     }
+
+    let reader = BufReader::new(file);
+    let mut wordlist = HashSet::new();
+
+    for line in reader.lines() {
+        let word = line.map_err(|err| {
+            if err.kind() == io::ErrorKind::InvalidData {
+                io::Error::new(
+                    io::ErrorKind::InvalidData,
+                    "Wordlist file contains invalid UTF-8",
+                )
+            } else {
+                err
+            }
+        })?;
+        let trimmed = word.trim().to_string();
+        if !trimmed.is_empty() {
+            wordlist.insert(trimmed);
+        }
+    }
+
+    Ok(wordlist)
 }
 
 /// Get configuration from file or create default if it doesn't exist

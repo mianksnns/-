@@ -209,7 +209,10 @@ impl TuiHandle {
 
     /// Mark a decoder as tried
     fn decoder_tried(&self, name: &str) {
-        let mut app = self.app.lock().unwrap();
+        let mut app = self
+            .app
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
         app.update_current_decoder(name);
         self.decoders_tried.fetch_add(1, Ordering::SeqCst);
         app.render();

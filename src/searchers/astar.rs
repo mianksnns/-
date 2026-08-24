@@ -47,7 +47,7 @@ use log::{debug, trace};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering as AtomicOrdering};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 // Add imports for parallel processing
 use dashmap::DashSet;
@@ -137,33 +137,39 @@ impl ThreadSafePriorityQueue {
         }
     }
 
+    fn queue(&self) -> MutexGuard<'_, BinaryHeap<AStarNode>> {
+        self.queue
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     /// Pushes a node into the queue.
     fn push(&self, node: AStarNode) {
-        let mut queue = self.queue.lock().unwrap();
+        let mut queue = self.queue();
         queue.push(node);
     }
 
     /// Removes and returns the highest-priority node, if any.
     fn pop(&self) -> Option<AStarNode> {
-        let mut queue = self.queue.lock().unwrap();
+        let mut queue = self.queue();
         queue.pop()
     }
 
     /// Returns whether the queue currently has no nodes.
     fn is_empty(&self) -> bool {
-        let queue = self.queue.lock().unwrap();
+        let queue = self.queue();
         queue.is_empty()
     }
 
     /// Returns the number of queued nodes.
     fn len(&self) -> usize {
-        let queue = self.queue.lock().unwrap();
+        let queue = self.queue();
         queue.len()
     }
 
     /// Extracts up to `batch_size` highest-priority nodes from the queue.
     fn extract_batch(&self, batch_size: usize) -> Vec<AStarNode> {
-        let mut queue = self.queue.lock().unwrap();
+        let mut queue = self.queue();
         let mut batch = Vec::with_capacity(batch_size);
 
         for _ in 0..batch_size {
@@ -452,11 +458,13 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     // Thread-safe priority queue for open set
     let open_set = ThreadSafePriorityQueue::new();
 
+    let initial_total_cost = generate_heuristic(&initial.text[0], &initial.path, &None);
+
     // Add initial node to open set
     open_set.push(AStarNode {
         state: initial,
         cost: 0,
-        total_cost: 0.0,
+        total_cost: initial_total_cost,
         next_decoder_name: None,
     });
 
